@@ -41,10 +41,10 @@
   <h3 style='text-align: center;'>Upload List</h3>
   <div id='uploadList'></div>
 
-<!-- upload modal -->
+<!-- new upload modal -->
 <div class="modal" id="uploadModal">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <div class="modal-content" id='newUploadFilesInput'>
 
       <!-- Modal Header -->
       <div class="modal-header " >
@@ -60,13 +60,23 @@
           <br>
 
           <h5><i class="fa fa-upload" aria-hidden="true"></i> Drag files into this window</h5>
+
+          <strong>Image Files: </strong>
+          <div id='newUploadImageFileList'>
+
+          </div>
+          <br>
+          <strong>Audio Files: </strong>
+          <div id='newUploadAudioFileList'>
+            
+          </div>
          
         </div>
       </div>
 
       <!-- Modal footer -->
       <div class="modal-footer">
-        <button style='display:inline' id='createUploadButton' type="button" class="float-left btn btn-primary" data-dismiss="modal" onclick="addNewUpload(document.getElementById('modalUploadTitleInput').value), ['fiules']">Create</button>
+        <button style='display:inline' id='createUploadButton' type="button" class="float-left btn btn-primary" data-dismiss="modal" onclick="addNewUpload(document.getElementById('modalUploadTitleInput').value)">Create</button>
       
       </div>
 

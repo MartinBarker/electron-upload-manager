@@ -6,35 +6,97 @@ updateUploadListDisplay()
 /*
 Event Listeners
 */
-$(document).keypress(function(e) {
-    if ($("#uploadModal").hasClass('show')) {
-      console.log("Enter is pressed");
-      document.getElementById('createUploadButton').click()
-    }
-  });
 
+//newUpload modal file drag & drop event listener
+var newUploadBox = document.getElementById('newUploadFilesInput')
+newUploadBox.addEventListener('drop', () => newUploadFileDropEvent(event))
+
+newUploadBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+});
+newUploadBox.addEventListener('dragenter', (event) => {
+    console.log('NEWUPLOAD File is in the Drop Space');
+    //newUploadBox.style.backgroundColor = '#cccccc';
+});
+
+newUploadBox.addEventListener('dragleave', (event) => {
+    console.log('NEWUPLOAD File has left the Drop Space');
+    //newUploadBox.style.backgroundColor = '#ffffff'
+}); 
+
+//when upload modal is hidden, clear inut values
+$('#uploadModal').on('hidden.bs.modal', function (e) {
+    document.getElementById('newUploadImageFileList').innerHTML = ''
+    document.getElementById('newUploadAudioFileList').innerHTML = ''
+    $(this)
+        .find("input,textarea,select")
+            .val('')
+            .end()
+        .find("input[type=checkbox], input[type=radio]")
+            .prop("checked", "")
+            .end();
+})
+//when upload modal is shown, click input field
+$('#uploadModal').on('shown.bs.modal', function (e) {
+    //if enter key is pressed, click confirm
+    $(document).keypress(function(e) {
+        if (e.which == 13) {
+            document.getElementById('createUploadButton').click()
+          }
+    })
+    //make input field focused
+    $('input:text:visible:first', this).focus();
+})
+//whn delete modal is shown, if enter is pressed -> click confirm
+$('#deleteModal').on('shown.bs.modal', function (e) {
+    //if enter key is pressed, click confirm
+    $(document).keypress(function(e) {
+        if (e.which == 13) {
+            document.getElementById('deleteUploadConfirm').click()
+          }
+    })
+})
 /*
 Functions
 */
-async function addNewUpload(title, files){
-    //show modal
-    //var modal = document.getElementById("uploadModal");
-    //modal.setAttribute('aria-model', 'true')
-    //modal.setAttribute('style', 'display: block; padding-right: 17px;')
-    //modal.setAttribute('class', 'modal show')
-    
-    //get uploadNumber
+
+function getRandomNumbers() {
+    const typedArray = new Uint8Array(5);
+    const randomValues = window.crypto.getRandomValues(typedArray);
+    return randomValues.join('');
+  }
+
+async function addNewUpload(uploadTitle){
+    //get unique uploadId timestamp
+    var uploadId = getRandomNumbers()
+
+    //get unique uploadNumber
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
     let uploadNumber = 1
     if(uploadList != null){
-        uploadNumber = (Object.keys(uploadList).length)+1;
+        //while upload already exists with that key
+        while(uploadList[`upload-${uploadNumber}`]){
+            uploadNumber++
+        }
+        //uploadNumber = (Object.keys(uploadList).length)+1;
     }
+    
+
+    //if title is null, set to default
+    if(uploadTitle.length < 1){
+        uploadTitle = `upload-${uploadNumber}`
+    }
+    
     let uploadKey = `upload-${uploadNumber}`
-    let uploadObj = {'files':files}
-    //console.log('addNewUpload: ', uploadKey, ' - ', uploadObj)
-    await addToUploadList(uploadKey, uploadObj)
+    let uploadObj = {'title':uploadTitle, 'files':newUploadFiles }
+    newUploadFiles = {}
+
+    console.log("+ addNewUpload() uploadKey = ", uploadKey, ", uploadObj = ", uploadObj, ", uploadNumber = ", uploadNumber)
+    //add to uploadList obj
+    await addToUploadList(uploadKey, uploadObj, uploadNumber)
+    //update uploadListDisplay
     updateUploadListDisplay()
-    //await createNewUploadCard(uploadObj, uploadNumber)
 }
 
 async function removeUploadFromUploadList(uploadId){
@@ -50,15 +112,25 @@ async function removeUploadFromUploadList(uploadId){
 async function deleteUpload(uploadId){
     console.log("deleteUpload() uploadId = ", uploadId)
     //when delete button is clicked
-    document.getElementById("deleteUploadConfirm").addEventListener("click", confirmDelete);
+    
+    document.getElementById("deleteUploadConfirm").addEventListener('click', confirmDelete, { passive: false });
 
-    async function confirmDelete() {
-        console.log('confirm delte uploadId = ', uploadId)
+    async function confirmDelete(){
+        console.log("deleteUpload() DELETE uploadId = ", uploadId)
         //remove card display
         document.getElementById(uploadId).remove()
         //remove card from db
         await removeUploadFromUploadList(uploadId)
+        //remove event listener
+        document.getElementById("deleteUploadConfirm").removeEventListener('click', confirmDelete);
     }
+
+
+      
+
+    //async function confirmDelete() {
+        
+    //}
 
 }
 
@@ -68,16 +140,16 @@ async function getLocalStorage(input){
     console.log(item)
 }
 
-async function createNewUploadCard(uploadObj, uploadNumber){
+async function createNewUploadCard(uploadTitle, uploadNumber){
     return new Promise(async function (resolve, reject) {
         $( "#uploadList" ).append( `
             
             <div id="upload-${uploadNumber}" class="card ml-5 mr-5 mt-5 uploadCard ">
                 <!-- Header -->
                 <div class="card-header expandable">
-                    <a data-toggle="collapse" href="#collapse-example-${uploadNumber}" aria-expanded="true" aria-controls="collapse-example-${uploadNumber}" id="heading-example-${uploadNumber}" >
+                    <a data-toggle="collapse" href="#collapse-example-${uploadNumber}" aria-expanded="false" aria-controls="collapse-example-${uploadNumber}" class='collapsed' id="heading-example-${uploadNumber}" >
                         <i class="rotate fa fa-chevron-down "></i>
-                        DEBUG Upload Title
+                        ${uploadTitle}
                     </a>
 
                     <a style='cursor: pointer;'  data-toggle="modal" data-target="#deleteModal" onClick='deleteUpload("upload-${uploadNumber}")' > 
@@ -87,7 +159,7 @@ async function createNewUploadCard(uploadObj, uploadNumber){
 
 
                 <!-- Body -->
-                <div id="collapse-example-${uploadNumber}" class="collapse show" aria-labelledby="heading-example-${uploadNumber}">
+                <div id="collapse-example-${uploadNumber}" class="collapse" aria-labelledby="heading-example-${uploadNumber}">
                     <div class="card-body">
                         temp input stuff cool quid
                     </div>
@@ -112,15 +184,19 @@ async function updateUploadListDisplay(){
         
         //for each object in uploadList
         for (const [key, value] of Object.entries(uploadList)) {
+            let uploadId = key 
+            let uploadTitle = value.title
+
             uploadNumber = key.split('-')[1]
+            //console.log('~ updateDisplay() uploadNumber = ', uploadNumber)
             //if div with id = upload-${uploadNumber} does not exist:
             var uploadObj = document.getElementById(`upload-${uploadNumber}`)
-            console.log("~ updateUploadListDisplay() uploadObj = ", uploadObj)
+            //console.log("~ updateUploadListDisplay() uploadObj = ", uploadObj)
             if(uploadObj == null){
-                console.log('~ updateUploadListDisplay() add to display: ', key, ', ', value)
-                await createNewUploadCard('info', uploadNumber)
+                //console.log('~ updateUploadListDisplay() add to display: ', key, ', ', value)
+                await createNewUploadCard(uploadTitle, uploadNumber)
             }else{
-                console.log('~ updateUploadListDisplay() dont add already visible: ', key, ', ', value)
+                //console.log('~ updateUploadListDisplay() dont add already visible: ', key, ', ', value)
             }
             
             
@@ -133,7 +209,7 @@ async function updateUploadListDisplay(){
             //uploadListDisplay.innerHTML = uploadListDisplay.innerHTML + `[${key}]-${JSON.stringify(value)}]<br><hr>`
           }
     }else{
-        console.log('~ updateUploadListDisplay() uploadList = null')
+        //console.log('~ updateUploadListDisplay() uploadList = null')
     }
     
 }
@@ -141,10 +217,7 @@ async function updateUploadListDisplay(){
 async function addToUploadList(uploadKey, uploadValue){
     return new Promise(async function (resolve, reject) {
 
-        //console.log("addToUploadList()")
-        //get uploadList from localstorage
         var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
-        //console.log("addToUploadList() init uploadList = ", uploadList)
 
         //if uploadList does not exists
         if(uploadList == null){
@@ -163,18 +236,19 @@ async function addToUploadList(uploadKey, uploadValue){
             //console.log(`${uploadKey} does exist in uploadList, so update pre-existing obj`)
         }
 
-        //console.log("addToUploadList() done uploadList = ", uploadList)
+        console.log("++ addToUploadList() done uploadList = ", uploadList)
         await localStorage.setItem('uploadList', JSON.stringify(uploadList))
         resolve('')
     })
 }
 
-async function fileDropEvent(event){
+var newUploadFiles = {}
+async function newUploadFileDropEvent(event){
     event.preventDefault();
     event.stopPropagation();
 
     //sort all files into audio / images 
-    var fileList = {'images':[], 'audio':{}}
+    var fileList = {'images':[], 'audio':[]}
     for (const f of event.dataTransfer.files) {
         // Using the path attribute to get absolute file path 
         if((f.type).includes('image')){
@@ -191,29 +265,36 @@ async function fileDropEvent(event){
             fileList.audio[audioFormat].push({'path':f.path, 'type':f.type, 'name':f.name})
         }
     }
-    console.log('files: ', fileList)
-    addNewUpload(fileList)
-    
+    newUploadFiles = fileList
+    console.log('newUploadFiles = ', newUploadFiles)
+
+    //display files in UI
+    var imageFilesHtml = ''
+    var audioFilesHtml = ''
+    for (const [key, value] of Object.entries(newUploadFiles)) {
+        console.log('key = ', key, ', value = ', value)
+        if(key=='images'){
+            for(var i = 0; i < value.length; i++){
+                imageFilesHtml = imageFilesHtml + `${value[i]['name']} <br>`
+            }
+            
+        }else if(key=='audio'){
+            for (const [audioFormat, audioFiles ] of Object.entries(newUploadFiles['audio'])) {
+                for(var x = 0; x < audioFiles.length; x++){
+                    console.log('f = ', audioFiles[x]['name'])
+                    audioFilesHtml = audioFilesHtml + `${audioFiles[x]['name']} <br>`
+                }
+            }
+        }
+    }
+
+    document.getElementById('newUploadImageFileList').innerHTML = imageFilesHtml
+    document.getElementById('newUploadAudioFileList').innerHTML = audioFilesHtml
+
+    //add file to uploadList object
+    //addNewUpload(fileList)
 }
 
-//add event listeners for every element on page with 'uploadCard' class
-var newUploadBox = document.getElementById('newUploadBox')
-newUploadBox.addEventListener('drop', () => fileDropEvent(event))
-
-newUploadBox.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-});
-
-newUploadBox.addEventListener('dragenter', (event) => {
-    console.log('File is in the Drop Space');
-    //newUploadBox.style.backgroundColor = '#cccccc';
-});
-
-newUploadBox.addEventListener('dragleave', (event) => {
-    console.log('File has left the Drop Space');
-    //newUploadBox.style.backgroundColor = '#ffffff'
-}); 
 
 /*
 for (var i = 0; i < uploadsOnPage.length; i++) {
