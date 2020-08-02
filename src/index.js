@@ -1,6 +1,28 @@
+/* 
+run this code when the page first loads 
+*/
+updateUploadListDisplay()
 
+/*
+Event Listeners
+*/
+$(document).keypress(function(e) {
+    if ($("#uploadModal").hasClass('show')) {
+      console.log("Enter is pressed");
+      document.getElementById('createUploadButton').click()
+    }
+  });
 
-async function addNewUpload(files=[]){
+/*
+Functions
+*/
+async function addNewUpload(title, files){
+    //show modal
+    //var modal = document.getElementById("uploadModal");
+    //modal.setAttribute('aria-model', 'true')
+    //modal.setAttribute('style', 'display: block; padding-right: 17px;')
+    //modal.setAttribute('class', 'modal show')
+    
     //get uploadNumber
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
     let uploadNumber = 1
@@ -14,6 +36,32 @@ async function addNewUpload(files=[]){
     updateUploadListDisplay()
     //await createNewUploadCard(uploadObj, uploadNumber)
 }
+
+async function removeUploadFromUploadList(uploadId){
+    console.log("delete ", uploadId)
+    let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
+    console.log("delte(0 before = uploadList = ", uploadList)
+    delete uploadList[uploadId]
+    console.log("REM(0 after = ", uploadList)
+    await localStorage.setItem('uploadList', JSON.stringify(uploadList))
+
+}
+
+async function deleteUpload(uploadId){
+    console.log("deleteUpload() uploadId = ", uploadId)
+    //when delete button is clicked
+    document.getElementById("deleteUploadConfirm").addEventListener("click", confirmDelete);
+
+    async function confirmDelete() {
+        console.log('confirm delte uploadId = ', uploadId)
+        //remove card display
+        document.getElementById(uploadId).remove()
+        //remove card from db
+        await removeUploadFromUploadList(uploadId)
+    }
+
+}
+
 
 async function getLocalStorage(input){
     var item = await JSON.parse(localStorage.getItem(input))
@@ -32,10 +80,11 @@ async function createNewUploadCard(uploadObj, uploadNumber){
                         DEBUG Upload Title
                     </a>
 
-                    <a style='cursor: pointer;' > 
+                    <a style='cursor: pointer;'  data-toggle="modal" data-target="#deleteModal" onClick='deleteUpload("upload-${uploadNumber}")' > 
                         <i style='color:red' class="fa fa-close pull-right"></i>
                     </a>
                 </div>
+
 
                 <!-- Body -->
                 <div id="collapse-example-${uploadNumber}" class="collapse show" aria-labelledby="heading-example-${uploadNumber}">
@@ -119,9 +168,6 @@ async function addToUploadList(uploadKey, uploadValue){
         resolve('')
     })
 }
-
-updateUploadListDisplay()
-
 
 async function fileDropEvent(event){
     event.preventDefault();
