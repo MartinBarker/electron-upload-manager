@@ -56,11 +56,22 @@
             Table:
 
           <!-- files table -->
-          <table id="example" class="display" cellspacing="2" width="100%">
+          <table id="example" class="display filesTable" cellspacing="2" width="100%">
             <thead>
                <tr>
-                  <th>Name</th>
-                  <th>Position</th>
+                  <th class='order' >#</th>
+                  <th><input type="checkbox"></th>
+                  <th>Audio</th>
+                  <th>Song</th>
+                  <!--
+                     <th>#</th>
+                  <th><input type="checkbox"></th>
+                  <th>Audio</th>
+                  <th>Length</th>
+                  <th>Image</th>
+                  <th>Output Location</th>
+                  <th>Output Format</th>
+                  -->
                </tr>
             </thead>
          </table>
@@ -155,6 +166,9 @@
 
 
 <style>
+  .filesTableOrder {
+    cursor: ns-resize;
+  }
   .uploadCard{
     overflow-x: auto;
 overflow-y : hidden;

@@ -4,27 +4,46 @@ run this code when the page first loads
 updateUploadListDisplay()
 
 //var $ = jQuery = require('jquery');
-require( 'datatables.net-dt' )();
-require( 'datatables.net-rowreorder-dt' )();
+require('datatables.net-dt')();
+require('datatables.net-rowreorder-dt')();
 
 var dataset1 = [
-    ["3","Ashton Cox","Junior Technical Author"],
-    ["4","Cedric Kelly","Senior Javascript Developer"],
-    ["5","Airi Satou","Accountant"],
+    ["1", `<input type="checkbox">`, "Ashton Cox", "Junior Technical Author"],
+    ["2", `<input type="checkbox">`, "Cedric Kelly", "Senior Javascript Developer"],
+    ["3", `<input type="checkbox">`, "Airi Satou", "Accountant"],
+    /*
+var dataset1 = [
+    ["1", `<input type="checkbox">`, "01. song.mp3", "92:02", "front.jpg", 'c/file', 'mp4'],
+    ["2", `<input type="checkbox">`, "02. song.mp3", "92:02", "front.jpg", 'c/file', 'mp4'],
+    ["3", `<input type="checkbox">`, "03. song.mp3", "92:02", "front.jpg", 'c/file', 'mp4'],
+];
+    */
 ];
 
-$('#example').DataTable( {
+var table = $('#example').DataTable({
     responsive: true,
-    
+
     data: dataset1,
     "dom": "t",
 
     //rowReorder: true,
-    rowReorder: {
-        selector: 'tr'
-    },
+    rowReorder: { selector: 'tr' },
     //columnDefs: [ { targets: 0, visible: false } ]
+});
+//row-reorder
+table.on( 'row-reorder', function ( e, diff, edit ) {
+    var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
+
+    for ( var i=0, ien=diff.length ; i<ien ; i++ ) {
+        var rowData = table.row( diff[i].node ).data();
+
+        result += rowData[1]+' updated to be in position '+
+            diff[i].newData+' (was '+diff[i].oldData+')<br>';
+    }
+
+    console.log(result );
 } );
+
 
 /*
 Event Listeners
@@ -46,7 +65,7 @@ newUploadBox.addEventListener('dragenter', (event) => {
 newUploadBox.addEventListener('dragleave', (event) => {
     console.log('NEWUPLOAD File has left the Drop Space');
     //newUploadBox.style.backgroundColor = '#ffffff'
-}); 
+});
 
 //when upload modal is hidden, clear inut values
 $('#uploadModal').on('hidden.bs.modal', function (e) {
@@ -54,19 +73,19 @@ $('#uploadModal').on('hidden.bs.modal', function (e) {
     document.getElementById('newUploadAudioFileList').innerHTML = ''
     $(this)
         .find("input,textarea,select")
-            .val('')
-            .end()
+        .val('')
+        .end()
         .find("input[type=checkbox], input[type=radio]")
-            .prop("checked", "")
-            .end();
+        .prop("checked", "")
+        .end();
 })
 //when upload modal is shown, click input field
 $('#uploadModal').on('shown.bs.modal', function (e) {
     //if enter key is pressed, click confirm
-    $(document).keypress(function(e) {
+    $(document).keypress(function (e) {
         if (e.which == 13) {
             document.getElementById('createUploadButton').click()
-          }
+        }
     })
     //make input field focused
     $('input:text:visible:first', this).focus();
@@ -74,45 +93,54 @@ $('#uploadModal').on('shown.bs.modal', function (e) {
 //whn delete modal is shown, if enter is pressed -> click confirm
 $('#deleteModal').on('shown.bs.modal', function (e) {
     //if enter key is pressed, click confirm
-    $(document).keypress(function(e) {
+    $(document).keypress(function (e) {
         if (e.which == 13) {
             document.getElementById('deleteUploadConfirm').click()
-          }
+        }
     })
 })
 /*
-Functions
+Function
 */
+function getDatatableContents(datatableID) {
+    var table = $(`#${datatableID}`).DataTable();
+    var data = table.rows().data();
+    console.log('The table has ' + data.length );
+    for(var i = 0; i < data.length; i++){
+        console.log(`row[${i}] = `, data[i])
+    }
+
+}
 
 function getRandomNumbers() {
     const typedArray = new Uint8Array(5);
     const randomValues = window.crypto.getRandomValues(typedArray);
     return randomValues.join('');
-  }
+}
 
-async function addNewUpload(uploadTitle){
+async function addNewUpload(uploadTitle) {
     //get unique uploadId timestamp
     var uploadId = getRandomNumbers()
 
     //get unique uploadNumber
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
     let uploadNumber = 1
-    if(uploadList != null){
+    if (uploadList != null) {
         //while upload already exists with that key
-        while(uploadList[`upload-${uploadNumber}`]){
+        while (uploadList[`upload-${uploadNumber}`]) {
             uploadNumber++
         }
         //uploadNumber = (Object.keys(uploadList).length)+1;
     }
-    
+
 
     //if title is null, set to default
-    if(uploadTitle.length < 1){
+    if (uploadTitle.length < 1) {
         uploadTitle = `upload-${uploadNumber}`
     }
-    
+
     let uploadKey = `upload-${uploadNumber}`
-    let uploadObj = {'title':uploadTitle, 'files':newUploadFiles }
+    let uploadObj = { 'title': uploadTitle, 'files': newUploadFiles }
     newUploadFiles = {}
 
     console.log("+ addNewUpload() uploadKey = ", uploadKey, ", uploadObj = ", uploadObj, ", uploadNumber = ", uploadNumber)
@@ -122,7 +150,7 @@ async function addNewUpload(uploadTitle){
     updateUploadListDisplay()
 }
 
-async function removeUploadFromUploadList(uploadId){
+async function removeUploadFromUploadList(uploadId) {
     console.log("delete ", uploadId)
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
     console.log("delte(0 before = uploadList = ", uploadList)
@@ -132,13 +160,13 @@ async function removeUploadFromUploadList(uploadId){
 
 }
 
-async function deleteUpload(uploadId){
+async function deleteUpload(uploadId) {
     console.log("deleteUpload() uploadId = ", uploadId)
     //when delete button is clicked
-    
+
     document.getElementById("deleteUploadConfirm").addEventListener('click', confirmDelete, { passive: false });
 
-    async function confirmDelete(){
+    async function confirmDelete() {
         console.log("deleteUpload() DELETE uploadId = ", uploadId)
         //remove card display
         document.getElementById(uploadId).remove()
@@ -149,23 +177,23 @@ async function deleteUpload(uploadId){
     }
 
 
-      
+
 
     //async function confirmDelete() {
-        
+
     //}
 
 }
 
 
-async function getLocalStorage(input){
+async function getLocalStorage(input) {
     var item = await JSON.parse(localStorage.getItem(input))
     console.log(item)
 }
 
-async function createNewUploadCard(uploadTitle, uploadNumber){
+async function createNewUploadCard(uploadTitle, uploadNumber) {
     return new Promise(async function (resolve, reject) {
-        $( "#uploadList" ).append( `
+        $("#uploadList").append(`
             
             <div id="upload-${uploadNumber}" class="card ml-5 mr-5 mt-5 uploadCard ">
                 <!-- Header -->
@@ -194,20 +222,20 @@ async function createNewUploadCard(uploadTitle, uploadNumber){
     })
 }
 
-async function updateUploadListDisplay(){
+async function updateUploadListDisplay() {
     let uploadListDisplay = document.getElementById('uploadList')
-    
+
     //get uploadList from localstorage
     var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
-    
+
     console.log('~ updateUploadListDisplay() uploadList = ', uploadList)
-    
+
     //if uploadList exists
-    if(uploadList != null){
-        
+    if (uploadList != null) {
+
         //for each object in uploadList
         for (const [key, value] of Object.entries(uploadList)) {
-            let uploadId = key 
+            let uploadId = key
             let uploadTitle = value.title
 
             uploadNumber = key.split('-')[1]
@@ -215,35 +243,35 @@ async function updateUploadListDisplay(){
             //if div with id = upload-${uploadNumber} does not exist:
             var uploadObj = document.getElementById(`upload-${uploadNumber}`)
             //console.log("~ updateUploadListDisplay() uploadObj = ", uploadObj)
-            if(uploadObj == null){
+            if (uploadObj == null) {
                 //console.log('~ updateUploadListDisplay() add to display: ', key, ', ', value)
                 await createNewUploadCard(uploadTitle, uploadNumber)
-            }else{
+            } else {
                 //console.log('~ updateUploadListDisplay() dont add already visible: ', key, ', ', value)
             }
-            
-            
 
-            
+
+
+
             //console.log('updateUploadListDisplay() newUploadCard = ', newUploadCard)
-            
+
             //uploadListDisplay.appendChild(newUploadCard);
             //console.log(`    ${key}: ${value}`);
             //uploadListDisplay.innerHTML = uploadListDisplay.innerHTML + `[${key}]-${JSON.stringify(value)}]<br><hr>`
-          }
-    }else{
+        }
+    } else {
         //console.log('~ updateUploadListDisplay() uploadList = null')
     }
-    
+
 }
 
-async function addToUploadList(uploadKey, uploadValue){
+async function addToUploadList(uploadKey, uploadValue) {
     return new Promise(async function (resolve, reject) {
 
         var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
 
         //if uploadList does not exists
-        if(uploadList == null){
+        if (uploadList == null) {
             //create new uploadList object
             let newUploadListObj = {}
             //set uploadList in localstorage
@@ -252,10 +280,10 @@ async function addToUploadList(uploadKey, uploadValue){
         }
 
         //if uploadKey does not exist
-        if(uploadList[uploadKey] == null){
+        if (uploadList[uploadKey] == null) {
             //console.log(`${uploadKey} does not exist in uploadList, so create new`)
             uploadList[uploadKey] = uploadValue
-        }else{
+        } else {
             //console.log(`${uploadKey} does exist in uploadList, so update pre-existing obj`)
         }
 
@@ -266,26 +294,26 @@ async function addToUploadList(uploadKey, uploadValue){
 }
 
 var newUploadFiles = {}
-async function newUploadFileDropEvent(event){
+async function newUploadFileDropEvent(event) {
     event.preventDefault();
     event.stopPropagation();
 
     //sort all files into audio / images 
-    var fileList = {'images':[], 'audio':[]}
+    var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
         // Using the path attribute to get absolute file path 
-        if((f.type).includes('image')){
+        if ((f.type).includes('image')) {
             //fileList.images.push({'path':f.path, 'type':f.type, 'name':f.name})
-            fileList.images.push({'path':f.path, 'type':f.type, 'name':f.name})
+            fileList.images.push({ 'path': f.path, 'type': f.type, 'name': f.name })
 
-        }else if((f.type).includes('audio')){
+        } else if ((f.type).includes('audio')) {
             var splitType = (f.type).split('/')
             var audioFormat = splitType[1]
             //if audioformat is not in object
-            if(!fileList.audio[audioFormat]){
+            if (!fileList.audio[audioFormat]) {
                 fileList.audio[audioFormat] = []
             }
-            fileList.audio[audioFormat].push({'path':f.path, 'type':f.type, 'name':f.name})
+            fileList.audio[audioFormat].push({ 'path': f.path, 'type': f.type, 'name': f.name })
         }
     }
     newUploadFiles = fileList
@@ -296,14 +324,14 @@ async function newUploadFileDropEvent(event){
     var audioFilesHtml = ''
     for (const [key, value] of Object.entries(newUploadFiles)) {
         console.log('key = ', key, ', value = ', value)
-        if(key=='images'){
-            for(var i = 0; i < value.length; i++){
+        if (key == 'images') {
+            for (var i = 0; i < value.length; i++) {
                 imageFilesHtml = imageFilesHtml + `${value[i]['name']} <br>`
             }
-            
-        }else if(key=='audio'){
-            for (const [audioFormat, audioFiles ] of Object.entries(newUploadFiles['audio'])) {
-                for(var x = 0; x < audioFiles.length; x++){
+
+        } else if (key == 'audio') {
+            for (const [audioFormat, audioFiles] of Object.entries(newUploadFiles['audio'])) {
+                for (var x = 0; x < audioFiles.length; x++) {
                     console.log('f = ', audioFiles[x]['name'])
                     audioFilesHtml = audioFilesHtml + `${audioFiles[x]['name']} <br>`
                 }
@@ -324,7 +352,7 @@ for (var i = 0; i < uploadsOnPage.length; i++) {
     var uploadElement = uploadsOnPage[i]
     //get classes in this element
     var uploadElementClasses = uploadElement.classList
-    //get uploadNumber from html class 
+    //get uploadNumber from html class
     for(var value of uploadElementClasses.values()) {
         if(value.includes('upload-')){
             var valueStr = value.toString()
@@ -346,10 +374,10 @@ for (var i = 0; i < uploadsOnPage.length; i++) {
 
     uploadElement.addEventListener('dragleave', (event) => {
         console.log('File has left the Drop Space');
-    }); 
+    });
 
     //uploadCardEventListeners(uploadElement)
-    
+
 }
 */
 
@@ -358,10 +386,10 @@ document.addEventListener('drop', (event) => {
     event.preventDefault();
     event.stopPropagation();
 
-    //sort all files into audio / images 
+    //sort all files into audio / images
     var fileList = {'images':[], 'audio':[]}
     for (const f of event.dataTransfer.files) {
-        // Using the path attribute to get absolute file path 
+        // Using the path attribute to get absolute file path
         //console.log('File Path of dragged files: ', f.path)
         if((f.type).includes('image')){
             fileList.images.push({'path':f.path, 'type':f.type, 'name':f.name})
@@ -390,8 +418,8 @@ document.addEventListener('drop', (event) => {
 
 function addUploadCard(number, fileList){
     console.log("fileList = ", fileList)
-    //create elements 
-    
+    //create elements
+
     //card
     var card = document.createElement('div')
     card.className = 'card ml-5 mr-5 mt-5'
@@ -399,13 +427,13 @@ function addUploadCard(number, fileList){
     //cardHeader
     var cardHeader = document.createElement('div')
     cardHeader.className = 'card-header'
-        //row 
+        //row
         var row = document.createElement('div')
         row.className = 'row'
             //col expandable
             var colExpandable = document.createElement('div')
             colExpandable.className = 'col expandable'
-                //a collapseable item 
+                //a collapseable item
                 var aItem = document.createElement('a')
                 aItem.setAttribute('data-toggle', 'collapse')
                 aItem.setAttribute('href', `#collapse-example${number}`)
@@ -448,9 +476,9 @@ function addUploadCard(number, fileList){
             var cardBodyDescription = document.createElement('div')
             cardBodyDescription.className = 'card-text'
             cardBodyDescription.innerHTML = 'Card Body Description'
-            //imageSelection 
+            //imageSelection
             var imageDiv = document.createElement('div')
-                //imageSelectionForm 
+                //imageSelectionForm
                 var imageSelectionForm = document.createElement('form')
                     //selectImageText
                     var selectImageText = document.createElement('p')
@@ -468,7 +496,7 @@ function addUploadCard(number, fileList){
                             imageSelectionInput.setAttribute('id', `${number}-contactChoice${i}`)
                             imageSelectionInput.setAttribute('name', `contact`)
                             imageSelectionInput.setAttribute('value', fileList['images'][i]['name'])
-                            //label 
+                            //label
                             var imageSelectionLabel = document.createElement('label')
                             imageSelectionLabel.setAttribute('for', `${number}-contactChoice${i}`)
                             imageSelectionLabel.innerText = `${fileList['images'][i]['name']}  `
@@ -483,7 +511,7 @@ function addUploadCard(number, fileList){
 
                         imageSelectionCards.push(imageSelectionDiv)
                     }
-            
+
             //tracklist
             var tracklistDiv = document.createElement('div')
             //for each audio type
@@ -496,7 +524,7 @@ function addUploadCard(number, fileList){
                     selectAudioText.innerText = `Select ${key} audio files:`
                     //append text to form
                     audioSelectionForm.appendChild(selectAudioText)
-                    var audioTrackSelections = [] 
+                    var audioTrackSelections = []
                     for(var i = 0; i < value.length; i++){
                         console.log('track = ', value[i])
                         var trackSelectionDiv = document.createElement('div')
@@ -517,17 +545,17 @@ function addUploadCard(number, fileList){
 
                         audioSelectionForm.appendChild(trackSelectionDiv)
                     }
-                    //append download button 
+                    //append download button
                     var renderButton = document.createElement('div')
                     renderButton.innerText = `Render `
 
-                    
+
                     //append form to list
                     audioSelectionTypes.push(audioSelectionForm)
             }
 
 
-    //append elements 
+    //append elements
     document.getElementById("uploadList").appendChild(card);
     card.appendChild(cardHeader)
         cardHeader.appendChild(row)
@@ -552,8 +580,8 @@ function addUploadCard(number, fileList){
                 for(var i = 0; i < audioSelectionTypes.length; i++){
                     tracklistDiv.appendChild(audioSelectionTypes[i])
                 }
-                        
-            
+
+
 }
 
 document.addEventListener('dragover', (e) => {
@@ -567,7 +595,7 @@ document.addEventListener('dragenter', (event) => {
 
 document.addEventListener('dragleave', (event) => {
     console.log('File has left the Drop Space');
-}); 
+});
 
 async function ffmpegTest(){
     console.log('ffmpeg-test')
@@ -585,7 +613,7 @@ async function ffmpegTest(){
     //tell the ffmpeg package where it can find the needed binaries.
     ffmpeg.setFfmpegPath(ffmpegPath);
     ffmpeg.setFfprobePath(ffprobePath);
-    
+
     var audioPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\3. Yaldut.flac"
     var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\front.jpg"
     var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\Yaldut.mp4"
@@ -596,9 +624,9 @@ async function ffmpegTest(){
     .input(imgPath)
     // using 25 fps
     .fps(25)
-    //audio bitrate 
+    //audio bitrate
     .audioBitrate('320k')
-    //video bitrate 
+    //video bitrate
     .videoBitrate('8000k', true) //1080p
     //resolution
     .size('1920x1080')
@@ -611,7 +639,7 @@ async function ffmpegTest(){
     })
     // save to file
     .save(videoPath);
-    
+
     //old under not working
     //convert image to video
     var proc = ffmpeg(imgPath)
@@ -619,9 +647,9 @@ async function ffmpegTest(){
     .loop(5)
     // using 25 fps
     .fps(25)
-    //audio bitrate 
+    //audio bitrate
     .audioBitrate('128k')
-    //video bitrate 
+    //video bitrate
     .videoBitrate('8000k', true)
     //resolution
     .size('1920x1080')
@@ -634,8 +662,8 @@ async function ffmpegTest(){
     })
     // save to file
     .save(outputPath);
-    
-   
+
+
     console.log("end of ffmpeg-test")
 }
 */
