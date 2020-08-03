@@ -3,6 +3,12 @@ run this code when the page first loads
 */
 updateUploadListDisplay()
 
+var $ = jQuery = require('jquery');
+require('datatables.net')();
+$('#example').DataTable( {
+    responsive: true
+} );
+
 /*
 Event Listeners
 */
