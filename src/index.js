@@ -3,10 +3,27 @@ run this code when the page first loads
 */
 updateUploadListDisplay()
 
-var $ = jQuery = require('jquery');
-require('datatables.net')();
+//var $ = jQuery = require('jquery');
+require( 'datatables.net-dt' )();
+require( 'datatables.net-rowreorder-dt' )();
+
+var dataset1 = [
+    ["3","Ashton Cox","Junior Technical Author"],
+    ["4","Cedric Kelly","Senior Javascript Developer"],
+    ["5","Airi Satou","Accountant"],
+];
+
 $('#example').DataTable( {
-    responsive: true
+    responsive: true,
+    
+    data: dataset1,
+    "dom": "t",
+
+    //rowReorder: true,
+    rowReorder: {
+        selector: 'tr'
+    },
+    //columnDefs: [ { targets: 0, visible: false } ]
 } );
 
 /*
