@@ -1,3 +1,4 @@
+var newUploadFiles = {}
 /* 
 run this code when the page first loads 
 */
@@ -11,25 +12,52 @@ var dataset1 = [
     ["1", `<input type="checkbox">`, "Ashton Cox", "Junior Technical Author"],
     ["2", `<input type="checkbox">`, "Cedric Kelly", "Senior Javascript Developer"],
     ["3", `<input type="checkbox">`, "Airi Satou", "Accountant"],
-    /*
-var dataset1 = [
-    ["1", `<input type="checkbox">`, "01. song.mp3", "92:02", "front.jpg", 'c/file', 'mp4'],
-    ["2", `<input type="checkbox">`, "02. song.mp3", "92:02", "front.jpg", 'c/file', 'mp4'],
-    ["3", `<input type="checkbox">`, "03. song.mp3", "92:02", "front.jpg", 'c/file', 'mp4'],
-];
-    */
 ];
 
 var table = $('#example').DataTable({
+    columnDefs: [ {
+        "targets": 1,
+        "orderable": false,
+        "className": 'selectall-checkbox',
+        } ],
     responsive: true,
-
     data: dataset1,
     "dom": "t",
-
-    //rowReorder: true,
-    rowReorder: { selector: 'tr' },
-    //columnDefs: [ { targets: 0, visible: false } ]
+    select: {
+        style: 'multi',
+        selector: 'td:nth-child(2)'
+    },
+    rowReorder: true,
+    
+    rowReorder: {
+        selector: 'td:nth-child(1)'
+    }
 });
+
+//select all checkbox clicked
+$('#selectAll').on('click', function(event){
+    //get status of select all box (checked == true, unchecked == false)
+    var selectAllStatus = document.getElementById('selectAll').checked
+    //if status == false and the user is trying to deselect all
+    if(!selectAllStatus){
+        //deselect all rows
+        //table.rows().deselect();
+        //uncheck all rows
+        var rows = table.rows().nodes();
+        $('input[type="checkbox"]', rows).prop('checked', this.checked);
+    
+    }else{
+        //if status == true and the user is trying to select all
+        // Get all rows with search applied
+        var rows = table.rows().nodes();
+        // Check/uncheck checkboxes for all rows in the table
+        $('input[type="checkbox"]', rows).prop('checked', this.checked);
+        //trigger select all button
+        //table.button(4).trigger()
+    }
+
+    
+ });
 //row-reorder
 table.on( 'row-reorder', function ( e, diff, edit ) {
     var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
@@ -67,7 +95,7 @@ newUploadBox.addEventListener('dragleave', (event) => {
     //newUploadBox.style.backgroundColor = '#ffffff'
 });
 
-//when upload modal is hidden, clear inut values
+//when upload modal is hidden, clear input values
 $('#uploadModal').on('hidden.bs.modal', function (e) {
     document.getElementById('newUploadImageFileList').innerHTML = ''
     document.getElementById('newUploadAudioFileList').innerHTML = ''
@@ -119,6 +147,7 @@ function getRandomNumbers() {
 }
 
 async function addNewUpload(uploadTitle) {
+    console.log('addNewUpload() newUploadFiles = ', newUploadFiles)
     //get unique uploadId timestamp
     var uploadId = getRandomNumbers()
 
@@ -132,7 +161,6 @@ async function addNewUpload(uploadTitle) {
         }
         //uploadNumber = (Object.keys(uploadList).length)+1;
     }
-
 
     //if title is null, set to default
     if (uploadTitle.length < 1) {
@@ -191,8 +219,33 @@ async function getLocalStorage(input) {
     console.log(item)
 }
 
-async function createNewUploadCard(uploadTitle, uploadNumber) {
+async function createDataset(uploadFiles){
     return new Promise(async function (resolve, reject) {
+        console.log("createDataset() uploadFiles = ", uploadFiles)
+        let dataSet = []
+        let fileCount = 1;
+        try{
+            //for each audio file
+            for(var x = 0; x < uploadFiles['audio'].length; x++){
+                    var audioObj = uploadFiles['audio'][x]
+                    console.log('file = ', audioObj)
+                    let rowObj = [fileCount, '<input type="checkbox">', audioObj.name, audioObj.type, audioObj.length, 'img', 'vidoutput', 'vidformat']
+                    ////order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
+                    fileCount++
+                    dataSet.push(rowObj)
+                //}
+            }
+        }catch(err){
+
+        }
+        resolve(dataSet)
+    })
+}
+
+async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
+    console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
+    return new Promise(async function (resolve, reject) {
+        
         $("#uploadList").append(`
             
             <div id="upload-${uploadNumber}" class="card ml-5 mr-5 mt-5 uploadCard ">
@@ -212,12 +265,71 @@ async function createNewUploadCard(uploadTitle, uploadNumber) {
                 <!-- Body -->
                 <div id="collapse-example-${uploadNumber}" class="collapse" aria-labelledby="heading-example-${uploadNumber}">
                     <div class="card-body">
-                        temp input stuff cool quid
+                        Table:
+                        <!-- files table -->
+                        <table id="upload_${uploadNumber}_table" class="display filesTable" cellspacing="2" width="100%">
+                        <thead>
+                            <tr> //order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
+                                <th class='order'>#</th>
+                                <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
+                                <th>Audio</th>
+                                <th>Format</th>
+                                <th>Length</th>
+                                <th>Image</th>
+                                <th>Video Output</th>
+                                <th>Video Format</th>
+                            </tr>
+                        </thead>
+                    </table>
                     </div>
                 </div>
             </div>
             
         ` );
+
+        let upload_table_files_dataset = await createDataset(uploadFiles)
+                
+        var upload_table = $(`#upload_${uploadNumber}_table`).DataTable({
+            columnDefs: [ {
+                "targets": 1,
+                "orderable": false,
+                "className": 'selectall-checkbox',
+                } ],
+            responsive: true,
+            data: upload_table_files_dataset,
+            "dom": "t",
+            select: {
+                style: 'multi',
+                selector: 'td:nth-child(2)'
+            },
+            rowReorder: true,
+            
+            rowReorder: {
+                selector: 'td:nth-child(1)'
+            }
+        });
+
+        //select all checkbox clicked
+        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function(event){
+            var selectAllStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
+                var rows = upload_table.rows().nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);              
+            
+         });
+        //row-reorder
+        upload_table.on( 'row-reorder', function ( e, diff, edit ) {
+            var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
+        
+            for ( var i=0, ien=diff.length ; i<ien ; i++ ) {
+                var rowData = upload_table.row( diff[i].node ).data();
+        
+                result += rowData[1]+' updated to be in position '+
+                    diff[i].newData+' (was '+diff[i].oldData+')<br>';
+            }
+        
+            console.log(result );
+        } );
+
         resolve()
     })
 }
@@ -237,7 +349,7 @@ async function updateUploadListDisplay() {
         for (const [key, value] of Object.entries(uploadList)) {
             let uploadId = key
             let uploadTitle = value.title
-
+            let uploadFiles = value.files
             uploadNumber = key.split('-')[1]
             //console.log('~ updateDisplay() uploadNumber = ', uploadNumber)
             //if div with id = upload-${uploadNumber} does not exist:
@@ -245,7 +357,7 @@ async function updateUploadListDisplay() {
             //console.log("~ updateUploadListDisplay() uploadObj = ", uploadObj)
             if (uploadObj == null) {
                 //console.log('~ updateUploadListDisplay() add to display: ', key, ', ', value)
-                await createNewUploadCard(uploadTitle, uploadNumber)
+                await createNewUploadCard(uploadTitle, uploadNumber, uploadFiles)
             } else {
                 //console.log('~ updateUploadListDisplay() dont add already visible: ', key, ', ', value)
             }
@@ -281,19 +393,25 @@ async function addToUploadList(uploadKey, uploadValue) {
 
         //if uploadKey does not exist
         if (uploadList[uploadKey] == null) {
-            //console.log(`${uploadKey} does not exist in uploadList, so create new`)
+            console.log(`setting ${uploadKey} in uploadList to be = `, uploadValue)
             uploadList[uploadKey] = uploadValue
+            uploadList[uploadKey]['audio'] = uploadValue['audio']
         } else {
             //console.log(`${uploadKey} does exist in uploadList, so update pre-existing obj`)
         }
 
         console.log("++ addToUploadList() done uploadList = ", uploadList)
-        await localStorage.setItem('uploadList', JSON.stringify(uploadList))
-        resolve('')
+        let result = await localStorage.setItem('uploadList', JSON.stringify(uploadList))
+        console.log('result = ', result)
+
+        var tempuploadList = await JSON.parse(localStorage.getItem('uploadList'))
+        console.log('tempuploadList = ', tempuploadList)
+        resolve('done')
     })
 }
 
-var newUploadFiles = {}
+
+
 async function newUploadFileDropEvent(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -310,10 +428,17 @@ async function newUploadFileDropEvent(event) {
             var splitType = (f.type).split('/')
             var audioFormat = splitType[1]
             //if audioformat is not in object
-            if (!fileList.audio[audioFormat]) {
-                fileList.audio[audioFormat] = []
-            }
-            fileList.audio[audioFormat].push({ 'path': f.path, 'type': f.type, 'name': f.name })
+            //if (!fileList.audio[audioFormat]) {
+            //    fileList.audio[audioFormat] = []
+            //}
+            //get audio length       
+            let audioLength = await getDuration(f.path)
+            //let audioLength = getAudioDurationInSeconds(f.path).then((duration) => {
+            audioLength = Math.round((audioLength/60) * 100) / 100
+            console.log('audioLength = ', audioLength)
+            //    return(duration);
+            //});
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length':audioLength })
         }
     }
     newUploadFiles = fileList
@@ -330,12 +455,12 @@ async function newUploadFileDropEvent(event) {
             }
 
         } else if (key == 'audio') {
-            for (const [audioFormat, audioFiles] of Object.entries(newUploadFiles['audio'])) {
-                for (var x = 0; x < audioFiles.length; x++) {
-                    console.log('f = ', audioFiles[x]['name'])
-                    audioFilesHtml = audioFilesHtml + `${audioFiles[x]['name']} <br>`
+            //for (const [audioFormat, audioFiles] of Object.entries(newUploadFiles['audio'])) {
+                for (var x = 0; x < value.length; x++) {
+                    //console.log('f = ', audioFiles[x]['name'])
+                    audioFilesHtml = audioFilesHtml + `${value[x]['name']} <br>`
                 }
-            }
+            //}
         }
     }
 
@@ -346,6 +471,16 @@ async function newUploadFileDropEvent(event) {
     //addNewUpload(fileList)
 }
 
+
+function getDuration(src) {
+    return new Promise(function(resolve) {
+        var audio = new Audio();
+        $(audio).on("loadedmetadata", function(){
+            resolve(audio.duration);
+        });
+        audio.src = src;
+    });
+}
 
 /*
 for (var i = 0; i < uploadsOnPage.length; i++) {

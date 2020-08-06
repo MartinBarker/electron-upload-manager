@@ -16,6 +16,7 @@
     "ffmpeg-static": "^4.2.6",
     "ffprobe-static": "^3.0.0",
     "fluent-ffmpeg": "^2.1.2",
+    "get-audio-duration": "^2.0.3",
     "jquery": "^3.5.1",
     "popper.js": "^1.16.1"
   },
