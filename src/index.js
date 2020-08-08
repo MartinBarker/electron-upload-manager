@@ -219,9 +219,24 @@ async function getLocalStorage(input) {
     console.log(item)
 }
 
-async function createDataset(uploadFiles){
+async function createDataset(uploadFiles, uploadNumber){
     return new Promise(async function (resolve, reject) {
         console.log("createDataset() uploadFiles = ", uploadFiles)
+        var imageSelectionForm = `<select name="cars">`
+        try{
+            //for each image
+            for (var x = 0; x < uploadFiles.images.length; x++) {
+                var imagFilename = `${uploadFiles.images[x].name}`
+                imageSelectionForm = imageSelectionForm + `<option value="${imagFilename}">${imagFilename}</option>`  
+            }
+            //add image dropdown selection to table
+            var imageDiv
+        }catch(err){
+
+        }
+        
+        imageSelectionForm = imageSelectionForm + `</select>`
+        
         let dataSet = []
         let fileCount = 1;
         try{
@@ -229,7 +244,16 @@ async function createDataset(uploadFiles){
             for(var x = 0; x < uploadFiles['audio'].length; x++){
                     var audioObj = uploadFiles['audio'][x]
                     console.log('file = ', audioObj)
-                    let rowObj = [fileCount, '<input type="checkbox">', audioObj.name, audioObj.type, audioObj.length, 'img', 'vidoutput', 'vidformat']
+                    let rowObj = [
+                        fileCount, 
+                        '<input type="checkbox">', 
+                        audioObj.name, 
+                        audioObj.type, 
+                        audioObj.length, 
+                        imageSelectionForm,
+                        'vidoutput', 
+                        'vidformat'
+                    ]
                     ////order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
                     fileCount++
                     dataSet.push(rowObj)
@@ -238,6 +262,25 @@ async function createDataset(uploadFiles){
         }catch(err){
 
         }
+
+        //create image dropdown selection
+        var uploadImageSelectionRowValue = document.createElement('select')
+        uploadImageSelectionRowValue.setAttribute('name', `upload-${uploadNumber}-imageOptions`)
+        uploadImageSelectionRowValue.setAttribute('id', `upload-${uploadNumber}-imageOptions`)
+        try{
+            for (var x = 0; x < uploadFiles.images.length; x++) {
+                var rowImg = document.createElement('option')
+                rowImg.setAttribute('value', uploadFiles.images[x].name)
+                rowImg.innerHTML = `${uploadFiles.images[x].name}`
+                uploadImageSelectionRowValue.appendChild(rowImg)
+            }
+            //add image dropdown selection to table
+            var imageDiv
+        }catch(err){
+
+        }
+        
+
         resolve(dataSet)
     })
 }
@@ -271,12 +314,18 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                         <thead>
                             <tr> //order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
                                 <th class='order'>#</th>
-                                <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
-                                <th>Audio</th>
+                                <th style="text-align: center;"><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
+                                <th id='upload_${uploadNumber}_audioCol'>Audio</th>
                                 <th>Format</th>
                                 <th>Length</th>
-                                <th>Image</th>
-                                <th>Video Output</th>
+                                <th id='upload_${uploadNumber}_tableImageSelectionColHeader'>
+                                </th>
+                                <th>
+                                    <select name="videoFormats">
+                                        <option value="videoFormat1">videoFormat1</option>
+                                        <option value="videoFormat2">videoFormat2</option>
+                                    </select>
+                                </th>
                                 <th>Video Format</th>
                             </tr>
                         </thead>
@@ -286,15 +335,72 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             </div>
             
         ` );
-
-        let upload_table_files_dataset = await createDataset(uploadFiles)
-                
+         //create image dropdown selection
+         var uploadImageSelectionColHeader = document.createElement('select')
+         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
+         try{
+            console.log('uploadFiles.images = ', uploadFiles.images)
+            for (var x = 0; x < uploadFiles.images.length; x++) {
+                var rowImg = document.createElement('option')
+                console.log('uploadFiles.images[x] = ', uploadFiles.images[x])
+                rowImg.setAttribute('value', uploadFiles.images[x].name)
+                rowImg.innerHTML = `${uploadFiles.images[x].name}`
+                uploadImageSelectionColHeader.appendChild(rowImg)
+            }
+         }catch(err){
+ 
+         }
+        //set image selection form header
+        document.getElementById(`upload_${uploadNumber}_tableImageSelectionColHeader`).appendChild(uploadImageSelectionColHeader)
+        
+        //create dataset
+        let upload_table_files_dataset = await createDataset(uploadFiles, uploadNumber)
+        
+        //create table
         var upload_table = $(`#upload_${uploadNumber}_table`).DataTable({
-            columnDefs: [ {
-                "targets": 1,
-                "orderable": false,
-                "className": 'selectall-checkbox',
-                } ],
+            columnDefs: [ 
+                {
+                    "targets": 0,
+                    "orderable": false,
+                    "className": "text-center",
+                },
+                {
+                    "targets": 1,
+                    "orderable": false,
+                    "className": 'selectall-checkbox',
+                    "className": "text-center",
+                },
+                {
+                    "targets": 2,
+                    //"orderable": false,
+                    "className": "text-left",
+                },
+                {
+                    "targets": 3,
+                    "orderable": false,
+                    "className": "text-center",
+                },
+                {
+                    "targets": 4,
+                    "orderable": false,
+                    "className": "text-center",
+                },
+                {
+                    "targets": 5,
+                    "orderable": false,
+                    "className": "text-center",
+                },
+                {
+                    "targets": 6,
+                    "orderable": false,
+                    "className": "text-center",
+                },
+                {
+                    "targets": 7,
+                    "orderable": false,
+                    "className": "text-center",
+                }, 
+            ],
             responsive: true,
             data: upload_table_files_dataset,
             "dom": "t",
@@ -309,12 +415,31 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             }
         });
 
+        //image selection changed
+        $('#upload-1-imageOptionsCol').change(function(e) {
+            console.log(`upload-1-imageOptionsCol clicked`)
+            
+           
+            upload_table.rows().eq(0).each( function ( index ) {
+                var row = upload_table.row( index );
+             
+                var data = row.data();
+                //console.log("row = ", row)
+                console.log("data = ", data)
+                data[2] = 'ex'
+            } );
+            
+            upload_table.draw();
+        });
+        //audio sort clicked
+        $(`#upload_${uploadNumber}_audioCol`).on('click', function(event){
+            console.log('audio sort clicked')
+        })
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function(event){
             var selectAllStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
                 var rows = upload_table.rows().nodes();
-                $('input[type="checkbox"]', rows).prop('checked', this.checked);              
-            
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);   
          });
         //row-reorder
         upload_table.on( 'row-reorder', function ( e, diff, edit ) {
