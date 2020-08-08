@@ -8,69 +8,217 @@ updateUploadListDisplay()
 require('datatables.net-dt')();
 require('datatables.net-rowreorder-dt')();
 
-var dataset1 = [
-    ["1", `<input type="checkbox">`, "Ashton Cox", "Junior Technical Author"],
-    ["2", `<input type="checkbox">`, "Cedric Kelly", "Senior Javascript Developer"],
-    ["3", `<input type="checkbox">`, "Airi Satou", "Accountant"],
+//
+//    TEMP TEST CARD CODE START 
+//
+var data = [
+    { sampleItemId: 1, name: 'Apple', category: 'Fruits', unit: 'pcs', size: 'small' },
+    { sampleItemId: 2, name: 'Boeing', category: 'Vehicles', unit: 'pcs', size: 'small' },
+    { sampleItemId: 3, name: 'Carbon', category: 'Other', unit: 'pcs', size: 'small' },
+    { sampleItemId: 4, name: 'Day', category: 'Time', unit: 'n/a', size: 'n/a' },
 ];
 
+var reorder = false;
+var searched = false;
+var origIndexes = [];
+var origSeq = [];
+var origNim = [];
+
 var table = $('#example').DataTable({
-    columnDefs: [ {
-        "targets": 1,
-        "orderable": false,
-        "className": 'selectall-checkbox',
-        } ],
-    responsive: true,
-    data: dataset1,
-    "dom": "t",
+    columns: [
+        { "data": "sequence" },
+        { "data": "#" },
+        { "data": "selectAll" },
+        { "data": "name" },
+        { "data": "unit" },
+        { "data": "category" },
+        { "data": "size" },
+        { "data": "description" },
+        { "data": "addToGeneration" }
+    ],
+    columnDefs: [
+        {
+            searchable: false,
+            orderable: false,
+            visible: false,
+            targets: 0,
+        },
+        {
+            searchable: false,
+            orderable: false,
+            targets: 1,
+        },
+        {
+            "className": 'selectall-checkbox',
+            "className": "text-center",
+            //"className": 'selectall-checkbox',
+            //"className": "text-center",
+            searchable: false,
+            orderable: false,
+            targets: 2,
+        },
+        {
+            targets: 3,
+            type: "string"
+        },
+        {
+            targets: 4,
+            type: "string"
+        },
+        {
+            targets: 5,
+            type: "string"
+        },
+        {
+            targets: 6,
+            type: "string"
+        },
+        {
+            targets: 7,
+            searchable: false,
+            orderable: false
+        },
+        {
+            targets: 8,
+            searchable: false,
+            orderable: false
+        }
+    ],
+    dom: 'Bfrtip',
+    rowReorder: {
+        dataSrc: 'sequence',
+    },
     select: {
         style: 'multi',
         selector: 'td:nth-child(2)'
     },
-    rowReorder: true,
-    
-    rowReorder: {
-        selector: 'td:nth-child(1)'
-    }
 });
 
+var count = 1;
+data.forEach(function (i) {
+    table.row.add({
+        "sequence": i.sampleItemId,
+        "#": count,
+        "selectAll": '<input type="checkbox">',
+        "name": i.name,
+        "category": i.category,
+        "unit": i.unit,
+        "size": i.size,
+        "description": "<button type='button' class='table-button' id='" + i.sampleItemId + "'>Description</button>",
+        "addToGeneration": "<button type='button' class='table-button' id='" + count + "'>Add</button>",
+    }).node().id = 'rowBrowseId' + i.sampleItemId;
+    count++;
+});
+table.draw();
+
 //select all checkbox clicked
-$('#selectAll').on('click', function(event){
-    //get status of select all box (checked == true, unchecked == false)
-    var selectAllStatus = document.getElementById('selectAll').checked
-    //if status == false and the user is trying to deselect all
-    if(!selectAllStatus){
-        //deselect all rows
-        //table.rows().deselect();
-        //uncheck all rows
-        var rows = table.rows().nodes();
-        $('input[type="checkbox"]', rows).prop('checked', this.checked);
-    
-    }else{
-        //if status == true and the user is trying to select all
-        // Get all rows with search applied
-        var rows = table.rows().nodes();
-        // Check/uncheck checkboxes for all rows in the table
-        $('input[type="checkbox"]', rows).prop('checked', this.checked);
-        //trigger select all button
-        //table.button(4).trigger()
-    }
+$(`#exampleSelectAll`).on('click', function (event) {
+    var rows = table.rows().nodes();
+    $('input[type="checkbox"]', rows).prop('checked', this.checked);
+});
+table.on('order.dt', function (e, diff, edit) {
+    console.log('order', reorder, searched);
 
+    //don't adjust "#" column if already changed by rowReorder or search events
+    if (!reorder && !searched) {
+      console.log('order.dt - resetting order');
+      i = 1;
+      //assign "#" values in row order
+      table.rows({search: 'applied', order: 'applied'}).every( function (rowIdx, tableLoop, rowLoop){
+        var data = this.data();
+        data['#'] = i;
+        i++;
+        this.data(data);
+      });
+    }
+    //reset booleans
+    reorder = false;
+    searched = false;
+  
+  });
+  table.on('row-reorder', function (e, details, edit) {
+    console.log('row-reorder');
+    //get original row indexes and original sequence (rowReorder indexes)
+    origIndexes = table.rows().indexes().toArray();
+    origSeq = table.rows().data().pluck('sequence').toArray();
+   });
+
+   table.on('search.dt', function () {
+    console.log('search', reorder);
+    //skip if reorder changed the "#" column order
+    if (!reorder) {
+      console.log('search.dt - resetting order');
+      i = 1;
+      //assign "#" values in row order
+      table.rows({search: 'applied', order: 'applied'}).every( function (rowIdx, tableLoop, rowLoop){
+        var data = this.data();
+        data['#'] = i;
+        i++;
+        this.data(data);
+      });
+    }
+    //don't change "#" order in the order event
+    searched = true;
+   });
+
+  table.on('row-reordered', function (e, details, edit) {
+    console.log('row-reorderd');
+    //get current row indexes and sequence (rowReorder indexes)
+    var indexes = table.rows().indexes().toArray();
+    //console.log('org indexes', origIndexes);
+    //console.log('new indexes', indexes);
+    var seq = table.rows().data().pluck('sequence').toArray();
+    //console.log('org seq', origSeq);
+    //console.log('new seq', seq);
+    i = 1;
     
- });
+    for (var r = 0; r < indexes.length; r++) {
+      //get row data
+      var data = table.row(indexes[r]).data();
+      //console.log('looking for',seq[r]);
+      //get new sequence 
+      //origSeq   [1, 3, 4, 2]
+      //seq       [3, 4, 1, 2]
+      //indexes   [0, 2, 3, 1]
+      //use the new sequence number to find index in origSeq
+      //the (index + 1) is the original row "#" to assign to the current row
+      newSeq = origSeq.indexOf(seq[r]);
+      //console.log('found new seq',newSeq);
+      
+      //assign the new "#" to the current row
+      data['#'] = newSeq + 1;
+      table.row(indexes[r]).data(data);
+      
+    }
+    //re-sort the table by the "#" column
+    table.order([1, 'asc']);
+    
+    //don't adjust the "#" column in the search and order events
+    reorder = true;
+   });
+
+//select all checkbox clicked
+$('#selectAll').on('click', function (event) {
+        var rows = table.rows().nodes();
+        $('input[type="checkbox"]', rows).prop('checked', this.checked);
+});
 //row-reorder
-table.on( 'row-reorder', function ( e, diff, edit ) {
-    var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
+table.on('row-reorder', function (e, diff, edit) {
+    var result = 'Reorder started on row: ' + edit.triggerRow.data()[1] + '<br>';
 
-    for ( var i=0, ien=diff.length ; i<ien ; i++ ) {
-        var rowData = table.row( diff[i].node ).data();
+    for (var i = 0, ien = diff.length; i < ien; i++) {
+        var rowData = table.row(diff[i].node).data();
 
-        result += rowData[1]+' updated to be in position '+
-            diff[i].newData+' (was '+diff[i].oldData+')<br>';
+        result += rowData[1] + ' updated to be in position ' +
+            diff[i].newData + ' (was ' + diff[i].oldData + ')<br>';
     }
 
-    console.log(result );
-} );
+    console.log(result);
+});
+
+//
+//    TEMP TEST CARD CODE END
+//
 
 
 /*
@@ -133,8 +281,8 @@ Function
 function getDatatableContents(datatableID) {
     var table = $(`#${datatableID}`).DataTable();
     var data = table.rows().data();
-    console.log('The table has ' + data.length );
-    for(var i = 0; i < data.length; i++){
+    console.log('The table has ' + data.length);
+    for (var i = 0; i < data.length; i++) {
         console.log(`row[${i}] = `, data[i])
     }
 
@@ -219,47 +367,47 @@ async function getLocalStorage(input) {
     console.log(item)
 }
 
-async function createDataset(uploadFiles, uploadNumber){
+async function createDataset(uploadFiles, uploadNumber) {
     return new Promise(async function (resolve, reject) {
         console.log("createDataset() uploadFiles = ", uploadFiles)
         var imageSelectionForm = `<select name="cars">`
-        try{
+        try {
             //for each image
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var imagFilename = `${uploadFiles.images[x].name}`
-                imageSelectionForm = imageSelectionForm + `<option value="${imagFilename}">${imagFilename}</option>`  
+                imageSelectionForm = imageSelectionForm + `<option value="${imagFilename}">${imagFilename}</option>`
             }
             //add image dropdown selection to table
             var imageDiv
-        }catch(err){
+        } catch (err) {
 
         }
-        
+
         imageSelectionForm = imageSelectionForm + `</select>`
-        
+
         let dataSet = []
         let fileCount = 1;
-        try{
+        try {
             //for each audio file
-            for(var x = 0; x < uploadFiles['audio'].length; x++){
-                    var audioObj = uploadFiles['audio'][x]
-                    console.log('file = ', audioObj)
-                    let rowObj = [
-                        fileCount, 
-                        '<input type="checkbox">', 
-                        audioObj.name, 
-                        audioObj.type, 
-                        audioObj.length, 
-                        imageSelectionForm,
-                        'vidoutput', 
-                        'vidformat'
-                    ]
-                    ////order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
-                    fileCount++
-                    dataSet.push(rowObj)
+            for (var x = 0; x < uploadFiles['audio'].length; x++) {
+                var audioObj = uploadFiles['audio'][x]
+                console.log('file = ', audioObj)
+                let rowObj = [
+                    fileCount,
+                    '<input type="checkbox">',
+                    audioObj.name,
+                    audioObj.type,
+                    audioObj.length,
+                    imageSelectionForm,
+                    'vidoutput',
+                    'vidformat'
+                ]
+                ////order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
+                fileCount++
+                dataSet.push(rowObj)
                 //}
             }
-        }catch(err){
+        } catch (err) {
 
         }
 
@@ -267,7 +415,7 @@ async function createDataset(uploadFiles, uploadNumber){
         var uploadImageSelectionRowValue = document.createElement('select')
         uploadImageSelectionRowValue.setAttribute('name', `upload-${uploadNumber}-imageOptions`)
         uploadImageSelectionRowValue.setAttribute('id', `upload-${uploadNumber}-imageOptions`)
-        try{
+        try {
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var rowImg = document.createElement('option')
                 rowImg.setAttribute('value', uploadFiles.images[x].name)
@@ -276,10 +424,10 @@ async function createDataset(uploadFiles, uploadNumber){
             }
             //add image dropdown selection to table
             var imageDiv
-        }catch(err){
+        } catch (err) {
 
         }
-        
+
 
         resolve(dataSet)
     })
@@ -288,7 +436,7 @@ async function createDataset(uploadFiles, uploadNumber){
 async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
     return new Promise(async function (resolve, reject) {
-        
+
         $("#uploadList").append(`
             
             <div id="upload-${uploadNumber}" class="card ml-5 mr-5 mt-5 uploadCard ">
@@ -335,10 +483,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             </div>
             
         ` );
-         //create image dropdown selection
-         var uploadImageSelectionColHeader = document.createElement('select')
-         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
-         try{
+        //create image dropdown selection
+        var uploadImageSelectionColHeader = document.createElement('select')
+        uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
+        try {
             console.log('uploadFiles.images = ', uploadFiles.images)
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var rowImg = document.createElement('option')
@@ -347,18 +495,18 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 rowImg.innerHTML = `${uploadFiles.images[x].name}`
                 uploadImageSelectionColHeader.appendChild(rowImg)
             }
-         }catch(err){
- 
-         }
+        } catch (err) {
+
+        }
         //set image selection form header
         document.getElementById(`upload_${uploadNumber}_tableImageSelectionColHeader`).appendChild(uploadImageSelectionColHeader)
-        
+
         //create dataset
         let upload_table_files_dataset = await createDataset(uploadFiles, uploadNumber)
-        
+
         //create table
         var upload_table = $(`#upload_${uploadNumber}_table`).DataTable({
-            columnDefs: [ 
+            columnDefs: [
                 {
                     "targets": 0,
                     "orderable": false,
@@ -399,7 +547,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     "targets": 7,
                     "orderable": false,
                     "className": "text-center",
-                }, 
+                },
             ],
             responsive: true,
             data: upload_table_files_dataset,
@@ -409,51 +557,51 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 selector: 'td:nth-child(2)'
             },
             rowReorder: true,
-            
+
             rowReorder: {
                 selector: 'td:nth-child(1)'
             }
         });
 
         //image selection changed
-        $('#upload-1-imageOptionsCol').change(function(e) {
+        $('#upload-1-imageOptionsCol').change(function (e) {
             console.log(`upload-1-imageOptionsCol clicked`)
-            
-           
-            upload_table.rows().eq(0).each( function ( index ) {
-                var row = upload_table.row( index );
-             
+
+
+            upload_table.rows().eq(0).each(function (index) {
+                var row = upload_table.row(index);
+
                 var data = row.data();
                 //console.log("row = ", row)
                 console.log("data = ", data)
                 data[2] = 'ex'
-            } );
-            
+            });
+
             upload_table.draw();
         });
         //audio sort clicked
-        $(`#upload_${uploadNumber}_audioCol`).on('click', function(event){
+        $(`#upload_${uploadNumber}_audioCol`).on('click', function (event) {
             console.log('audio sort clicked')
         })
         //select all checkbox clicked
-        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function(event){
+        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
             var selectAllStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
-                var rows = upload_table.rows().nodes();
-                $('input[type="checkbox"]', rows).prop('checked', this.checked);   
-         });
+            var rows = upload_table.rows().nodes();
+            $('input[type="checkbox"]', rows).prop('checked', this.checked);
+        });
         //row-reorder
-        upload_table.on( 'row-reorder', function ( e, diff, edit ) {
-            var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
-        
-            for ( var i=0, ien=diff.length ; i<ien ; i++ ) {
-                var rowData = upload_table.row( diff[i].node ).data();
-        
-                result += rowData[1]+' updated to be in position '+
-                    diff[i].newData+' (was '+diff[i].oldData+')<br>';
+        upload_table.on('row-reorder', function (e, diff, edit) {
+            var result = 'Reorder started on row: ' + edit.triggerRow.data()[1] + '<br>';
+
+            for (var i = 0, ien = diff.length; i < ien; i++) {
+                var rowData = upload_table.row(diff[i].node).data();
+
+                result += rowData[1] + ' updated to be in position ' +
+                    diff[i].newData + ' (was ' + diff[i].oldData + ')<br>';
             }
-        
-            console.log(result );
-        } );
+
+            console.log(result);
+        });
 
         resolve()
     })
@@ -559,11 +707,11 @@ async function newUploadFileDropEvent(event) {
             //get audio length       
             let audioLength = await getDuration(f.path)
             //let audioLength = getAudioDurationInSeconds(f.path).then((duration) => {
-            audioLength = Math.round((audioLength/60) * 100) / 100
+            audioLength = Math.round((audioLength / 60) * 100) / 100
             console.log('audioLength = ', audioLength)
             //    return(duration);
             //});
-            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length':audioLength })
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength })
         }
     }
     newUploadFiles = fileList
@@ -581,10 +729,10 @@ async function newUploadFileDropEvent(event) {
 
         } else if (key == 'audio') {
             //for (const [audioFormat, audioFiles] of Object.entries(newUploadFiles['audio'])) {
-                for (var x = 0; x < value.length; x++) {
-                    //console.log('f = ', audioFiles[x]['name'])
-                    audioFilesHtml = audioFilesHtml + `${value[x]['name']} <br>`
-                }
+            for (var x = 0; x < value.length; x++) {
+                //console.log('f = ', audioFiles[x]['name'])
+                audioFilesHtml = audioFilesHtml + `${value[x]['name']} <br>`
+            }
             //}
         }
     }
@@ -598,9 +746,9 @@ async function newUploadFileDropEvent(event) {
 
 
 function getDuration(src) {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
         var audio = new Audio();
-        $(audio).on("loadedmetadata", function(){
+        $(audio).on("loadedmetadata", function () {
             resolve(audio.duration);
         });
         audio.src = src;
