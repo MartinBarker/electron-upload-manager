@@ -121,47 +121,47 @@ table.on('order.dt', function (e, diff, edit) {
 
     //don't adjust "#" column if already changed by rowReorder or search events
     if (!reorder && !searched) {
-      console.log('order.dt - resetting order');
-      i = 1;
-      //assign "#" values in row order
-      table.rows({search: 'applied', order: 'applied'}).every( function (rowIdx, tableLoop, rowLoop){
-        var data = this.data();
-        data['#'] = i;
-        i++;
-        this.data(data);
-      });
+        console.log('order.dt - resetting order');
+        i = 1;
+        //assign "#" values in row order
+        table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+            var data = this.data();
+            data['#'] = i;
+            i++;
+            this.data(data);
+        });
     }
     //reset booleans
     reorder = false;
     searched = false;
-  
-  });
-  table.on('row-reorder', function (e, details, edit) {
+
+});
+table.on('row-reorder', function (e, details, edit) {
     console.log('row-reorder');
     //get original row indexes and original sequence (rowReorder indexes)
     origIndexes = table.rows().indexes().toArray();
     origSeq = table.rows().data().pluck('sequence').toArray();
-   });
+});
 
-   table.on('search.dt', function () {
+table.on('search.dt', function () {
     console.log('search', reorder);
     //skip if reorder changed the "#" column order
     if (!reorder) {
-      console.log('search.dt - resetting order');
-      i = 1;
-      //assign "#" values in row order
-      table.rows({search: 'applied', order: 'applied'}).every( function (rowIdx, tableLoop, rowLoop){
-        var data = this.data();
-        data['#'] = i;
-        i++;
-        this.data(data);
-      });
+        console.log('search.dt - resetting order');
+        i = 1;
+        //assign "#" values in row order
+        table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+            var data = this.data();
+            data['#'] = i;
+            i++;
+            this.data(data);
+        });
     }
     //don't change "#" order in the order event
     searched = true;
-   });
+});
 
-  table.on('row-reordered', function (e, details, edit) {
+table.on('row-reordered', function (e, details, edit) {
     console.log('row-reorderd');
     //get current row indexes and sequence (rowReorder indexes)
     var indexes = table.rows().indexes().toArray();
@@ -171,36 +171,36 @@ table.on('order.dt', function (e, diff, edit) {
     //console.log('org seq', origSeq);
     //console.log('new seq', seq);
     i = 1;
-    
+
     for (var r = 0; r < indexes.length; r++) {
-      //get row data
-      var data = table.row(indexes[r]).data();
-      //console.log('looking for',seq[r]);
-      //get new sequence 
-      //origSeq   [1, 3, 4, 2]
-      //seq       [3, 4, 1, 2]
-      //indexes   [0, 2, 3, 1]
-      //use the new sequence number to find index in origSeq
-      //the (index + 1) is the original row "#" to assign to the current row
-      newSeq = origSeq.indexOf(seq[r]);
-      //console.log('found new seq',newSeq);
-      
-      //assign the new "#" to the current row
-      data['#'] = newSeq + 1;
-      table.row(indexes[r]).data(data);
-      
+        //get row data
+        var data = table.row(indexes[r]).data();
+        //console.log('looking for',seq[r]);
+        //get new sequence 
+        //origSeq   [1, 3, 4, 2]
+        //seq       [3, 4, 1, 2]
+        //indexes   [0, 2, 3, 1]
+        //use the new sequence number to find index in origSeq
+        //the (index + 1) is the original row "#" to assign to the current row
+        newSeq = origSeq.indexOf(seq[r]);
+        //console.log('found new seq',newSeq);
+
+        //assign the new "#" to the current row
+        data['#'] = newSeq + 1;
+        table.row(indexes[r]).data(data);
+
     }
     //re-sort the table by the "#" column
     table.order([1, 'asc']);
-    
+
     //don't adjust the "#" column in the search and order events
     reorder = true;
-   });
+});
 
 //select all checkbox clicked
 $('#selectAll').on('click', function (event) {
-        var rows = table.rows().nodes();
-        $('input[type="checkbox"]', rows).prop('checked', this.checked);
+    var rows = table.rows().nodes();
+    $('input[type="checkbox"]', rows).prop('checked', this.checked);
 });
 //row-reorder
 table.on('row-reorder', function (e, diff, edit) {
@@ -369,65 +369,56 @@ async function getLocalStorage(input) {
 
 async function createDataset(uploadFiles, uploadNumber) {
     return new Promise(async function (resolve, reject) {
-        console.log("createDataset() uploadFiles = ", uploadFiles)
-        var imageSelectionForm = `<select name="cars">`
+        //create img selection part of form
+        var imageSelectionOptions = ``
         try {
             //for each image
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var imagFilename = `${uploadFiles.images[x].name}`
-                imageSelectionForm = imageSelectionForm + `<option value="${imagFilename}">${imagFilename}</option>`
+                imageSelectionOptions = imageSelectionOptions + `<option value="${imagFilename}">${imagFilename}</option>`
             }
-            //add image dropdown selection to table
-            var imageDiv
         } catch (err) {
 
         }
-
-        imageSelectionForm = imageSelectionForm + `</select>`
-
+    
+        //create dataset
         let dataSet = []
         let fileCount = 1;
         try {
             //for each audio file
             for (var x = 0; x < uploadFiles['audio'].length; x++) {
                 var audioObj = uploadFiles['audio'][x]
-                console.log('file = ', audioObj)
-                let rowObj = [
-                    fileCount,
-                    '<input type="checkbox">',
-                    audioObj.name,
-                    audioObj.type,
-                    audioObj.length,
-                    imageSelectionForm,
-                    'vidoutput',
-                    'vidformat'
-                ]
-                ////order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
+                
+                //create img selection form
+                var imgSelectionSelect = `<select id='upload_${uploadNumber}_table-image-row_${x}' >`
+                imgSelectionSelect = imgSelectionSelect + imageSelectionOptions + `</select>`
+
+                //creaet vid output selection
+                var videoOutputSelection = `
+                <select id='upload_${uploadNumber}_table-vidFormat-row_${x}'>
+                    <option value="0">mp4</option>
+                    <option value="1">avi</option>
+                </select> 
+                `
+
+                //create row obj
+                let rowObj = {
+                    //sequence(leave empty)
+                    itemId: fileCount,
+                    //select box(leave empty)
+                    audio: audioObj.name,
+                    format: audioObj.type,
+                    length: audioObj.length,
+                    imgSelection: imgSelectionSelect,
+                    vidFormatSelection: videoOutputSelection
+                    //video output(leave empty)
+                }
                 fileCount++
                 dataSet.push(rowObj)
-                //}
             }
         } catch (err) {
 
         }
-
-        //create image dropdown selection
-        var uploadImageSelectionRowValue = document.createElement('select')
-        uploadImageSelectionRowValue.setAttribute('name', `upload-${uploadNumber}-imageOptions`)
-        uploadImageSelectionRowValue.setAttribute('id', `upload-${uploadNumber}-imageOptions`)
-        try {
-            for (var x = 0; x < uploadFiles.images.length; x++) {
-                var rowImg = document.createElement('option')
-                rowImg.setAttribute('value', uploadFiles.images[x].name)
-                rowImg.innerHTML = `${uploadFiles.images[x].name}`
-                uploadImageSelectionRowValue.appendChild(rowImg)
-            }
-            //add image dropdown selection to table
-            var imageDiv
-        } catch (err) {
-
-        }
-
 
         resolve(dataSet)
     })
@@ -436,6 +427,7 @@ async function createDataset(uploadFiles, uploadNumber) {
 async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
     return new Promise(async function (resolve, reject) {
+
 
         $("#uploadList").append(`
             
@@ -454,28 +446,47 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
 
                 <!-- Body -->
-                <div id="collapse-example-${uploadNumber}" class="collapse" aria-labelledby="heading-example-${uploadNumber}">
+                <div id="collapse-example-${uploadNumber}" class="collapse show" aria-labelledby="heading-example-${uploadNumber}">
                     <div class="card-body">
                         Table:
                         <!-- files table -->
                         <table id="upload_${uploadNumber}_table" class="display filesTable" cellspacing="2" width="100%">
-                        <thead>
-                            <tr> //order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
-                                <th class='order'>#</th>
-                                <th style="text-align: center;"><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
-                                <th id='upload_${uploadNumber}_audioCol'>Audio</th>
+                        <thead> 
+                           <!-- attempt 1
+                            <tr> 
+                                <th>sequence</th> //invisible sequence col
+                                <th>#</th>        //number / count
+                                <th style="text-align: center;">
+                                    <input id='upload_${uploadNumber}_table-selectAll' type="checkbox">
+                                </th>
+                                <th>Audio</th>
                                 <th>Format</th>
                                 <th>Length</th>
-                                <th id='upload_${uploadNumber}_tableImageSelectionColHeader'>
-                                </th>
+                                <th id='upload_${uploadNumber}_table-image-col'></th>
                                 <th>
-                                    <select name="videoFormats">
-                                        <option value="videoFormat1">videoFormat1</option>
-                                        <option value="videoFormat2">videoFormat2</option>
+                                video output: <select name="outputVideoFormats">
+                                        <option value="mp4">mp4</option>
+                                        <option value="avi">avi</option>
                                     </select>
                                 </th>
-                                <th>Video Format</th>
                             </tr>
+                            -->
+                           <tr>
+                            <th>sequence</th>
+                            <th>#</th>
+                            <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
+                            <th>Audio</th>
+                            <th>Format</th>
+                            <th>Length</th>
+                            <th>Image: <div id='upload_${uploadNumber}_table-image-col'></div></th>
+                            <th>Video Format: <div><select id='upload_${uploadNumber}_table-vidFormat-col'>
+                                <option value="0">mp4</option>
+                                <option value="1">avi</option>
+                            </select> </div>
+                                
+                            </th>
+                            <th>Video Output Location</th>
+                           </tr>
                         </thead>
                     </table>
                     </div>
@@ -483,118 +494,240 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             </div>
             
         ` );
+
+        // ATTEMPTY 2
+
         //create image dropdown selection
         var uploadImageSelectionColHeader = document.createElement('select')
         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
         try {
-            console.log('uploadFiles.images = ', uploadFiles.images)
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var rowImg = document.createElement('option')
-                console.log('uploadFiles.images[x] = ', uploadFiles.images[x])
-                rowImg.setAttribute('value', uploadFiles.images[x].name)
+                rowImg.setAttribute('value', x)
                 rowImg.innerHTML = `${uploadFiles.images[x].name}`
                 uploadImageSelectionColHeader.appendChild(rowImg)
             }
         } catch (err) {
 
         }
-        //set image selection form header
-        document.getElementById(`upload_${uploadNumber}_tableImageSelectionColHeader`).appendChild(uploadImageSelectionColHeader)
+        //add image dropdown selection to table html
+       document.getElementById(`upload_${uploadNumber}_table-image-col`).appendChild(uploadImageSelectionColHeader)
 
         //create dataset
-        let upload_table_files_dataset = await createDataset(uploadFiles, uploadNumber)
+        let data = await createDataset(uploadFiles, uploadNumber)
 
-        //create table
-        var upload_table = $(`#upload_${uploadNumber}_table`).DataTable({
+        /*
+        var data = [
+            { sampleItemId: 1, name: 'Apple', category: 'Fruits', unit: 'pcs', size: 'small' },
+            { sampleItemId: 2, name: 'Boeing', category: 'Vehicles', unit: 'pcs', size: 'small' },
+            { sampleItemId: 3, name: 'Carbon', category: 'Other', unit: 'pcs', size: 'small' },
+            { sampleItemId: 4, name: 'Day', category: 'Time', unit: 'n/a', size: 'n/a' },
+        ];
+        */
+        
+
+        var reorder = false;
+        var searched = false;
+        var origIndexes = [];
+        var origSeq = [];
+        var origNim = [];
+
+        var table = $(`#upload_${uploadNumber}_table`).DataTable({
+            columns: [
+                { "data": "sequence" },
+                { "data": "#" },
+                { "data": "selectAll" },
+                { "data": "audio" },
+                { "data": "format" },
+                { "data": "length" },
+                { "data": "imgSelection" },
+                { "data": "outputFormat" },
+                { "data": "outputLocation" },
+            ],
             columnDefs: [
                 {
-                    "targets": 0,
-                    "orderable": false,
-                    "className": "text-center",
+                    searchable: false,
+                    orderable: false,
+                    visible: false,
+                    targets: 0,
                 },
                 {
-                    "targets": 1,
-                    "orderable": false,
+                    searchable: false,
+                    orderable: false,
+                    targets: 1,
+                },
+                {
                     "className": 'selectall-checkbox',
                     "className": "text-center",
+                    searchable: false,
+                    orderable: false,
+                    targets: 2,
                 },
                 {
-                    "targets": 2,
-                    //"orderable": false,
-                    "className": "text-left",
+                    targets: 3,
+                    type: "string"
                 },
                 {
-                    "targets": 3,
-                    "orderable": false,
-                    "className": "text-center",
+                    targets: 4,
+                    type: "string"
                 },
                 {
-                    "targets": 4,
-                    "orderable": false,
-                    "className": "text-center",
+                    targets: 5,
+                    type: "string"
                 },
                 {
-                    "targets": 5,
-                    "orderable": false,
-                    "className": "text-center",
+                    targets: 6,
+                    type: "string",
+                    orderable: false,
                 },
                 {
-                    "targets": 6,
-                    "orderable": false,
-                    "className": "text-center",
-                },
-                {
-                    "targets": 7,
-                    "orderable": false,
-                    "className": "text-center",
-                },
+                    targets: 7,
+                    searchable: false,
+                    orderable: false
+                }
             ],
-            responsive: true,
-            data: upload_table_files_dataset,
-            "dom": "t",
+            dom: 'Bfrtip',
+            rowReorder: {
+                dataSrc: 'sequence',
+            },
             select: {
                 style: 'multi',
                 selector: 'td:nth-child(2)'
             },
-            rowReorder: true,
-
-            rowReorder: {
-                selector: 'td:nth-child(1)'
-            }
         });
+
+        var count = 1;
+        data.forEach(function (i) {
+            table.row.add({
+                "sequence": i.itemId,
+                "#": count,
+                "selectAll": '<input type="checkbox">',
+                "audio": i.audio,
+                "format": i.format,
+                "length": i.length,
+                "imgSelection": i.imgSelection,
+                "outputFormat": i.vidFormatSelection,
+                "outputLocation": "temp output location",
+            }).node().id = 'rowBrowseId' + i.sampleItemId;
+            count++;
+        });
+        table.draw();
 
         //image selection changed
-        $('#upload-1-imageOptionsCol').change(function (e) {
+        $(`#upload-${uploadNumber}-imageOptionsCol`).change(function(event) {
             console.log(`upload-1-imageOptionsCol clicked`)
-
-
-            upload_table.rows().eq(0).each(function (index) {
-                var row = upload_table.row(index);
-
-                var data = row.data();
-                //console.log("row = ", row)
-                console.log("data = ", data)
-                data[2] = 'ex'
-            });
-
-            upload_table.draw();
+            let indexValueImgChoice = $(`#upload-${uploadNumber}-imageOptionsCol`).val()
+            console.log('set all to ', indexValueImgChoice)
+            table.rows().eq(0).each( function ( index ) {
+                console.log('index = ', index)
+                document.getElementById(`upload_${uploadNumber}_table-image-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+            } );
         });
-        //audio sort clicked
-        $(`#upload_${uploadNumber}_audioCol`).on('click', function (event) {
-            console.log('audio sort clicked')
-        })
+
+        //video output format selection changed
+        $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
+            let indexValueImgChoice = $(`#upload_${uploadNumber}_table-vidFormat-col`).val()
+            console.log('set all to ', indexValueImgChoice)
+            table.rows().eq(0).each( function ( index ) {
+                document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+            } );
+        });
+
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
-            var selectAllStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
-            var rows = upload_table.rows().nodes();
+            console.log('select all clicked')
+            var rows = table.rows().nodes();
             $('input[type="checkbox"]', rows).prop('checked', this.checked);
         });
+
+        table.on('order.dt', function (e, diff, edit) {
+            console.log('order', reorder, searched);
+
+            //don't adjust "#" column if already changed by rowReorder or search events
+            if (!reorder && !searched) {
+                console.log('order.dt - resetting order');
+                i = 1;
+                //assign "#" values in row order
+                table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+                    var data = this.data();
+                    data['#'] = i;
+                    i++;
+                    this.data(data);
+                });
+            }
+            //reset booleans
+            reorder = false;
+            searched = false;
+
+        });
+        table.on('row-reorder', function (e, details, edit) {
+            console.log('row-reorder');
+            //get original row indexes and original sequence (rowReorder indexes)
+            origIndexes = table.rows().indexes().toArray();
+            origSeq = table.rows().data().pluck('sequence').toArray();
+        });
+
+        table.on('search.dt', function () {
+            console.log('search', reorder);
+            //skip if reorder changed the "#" column order
+            if (!reorder) {
+                console.log('search.dt - resetting order');
+                i = 1;
+                //assign "#" values in row order
+                table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+                    var data = this.data();
+                    data['#'] = i;
+                    i++;
+                    this.data(data);
+                });
+            }
+            //don't change "#" order in the order event
+            searched = true;
+        });
+
+        table.on('row-reordered', function (e, details, edit) {
+            console.log('row-reorderd');
+            //get current row indexes and sequence (rowReorder indexes)
+            var indexes = table.rows().indexes().toArray();
+            //console.log('org indexes', origIndexes);
+            //console.log('new indexes', indexes);
+            var seq = table.rows().data().pluck('sequence').toArray();
+            //console.log('org seq', origSeq);
+            //console.log('new seq', seq);
+            i = 1;
+
+            for (var r = 0; r < indexes.length; r++) {
+                //get row data
+                var data = table.row(indexes[r]).data();
+                //console.log('looking for',seq[r]);
+                //get new sequence 
+                //origSeq   [1, 3, 4, 2]
+                //seq       [3, 4, 1, 2]
+                //indexes   [0, 2, 3, 1]
+                //use the new sequence number to find index in origSeq
+                //the (index + 1) is the original row "#" to assign to the current row
+                newSeq = origSeq.indexOf(seq[r]);
+                //console.log('found new seq',newSeq);
+
+                //assign the new "#" to the current row
+                data['#'] = newSeq + 1;
+                table.row(indexes[r]).data(data);
+
+            }
+            //re-sort the table by the "#" column
+            table.order([1, 'asc']);
+
+            //don't adjust the "#" column in the search and order events
+            reorder = true;
+        });
+
+        
         //row-reorder
-        upload_table.on('row-reorder', function (e, diff, edit) {
+        table.on('row-reorder', function (e, diff, edit) {
             var result = 'Reorder started on row: ' + edit.triggerRow.data()[1] + '<br>';
 
             for (var i = 0, ien = diff.length; i < ien; i++) {
-                var rowData = upload_table.row(diff[i].node).data();
+                var rowData = table.row(diff[i].node).data();
 
                 result += rowData[1] + ' updated to be in position ' +
                     diff[i].newData + ' (was ' + diff[i].oldData + ')<br>';
@@ -602,6 +735,213 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
             console.log(result);
         });
+
+
+
+
+        /* TABLE INITIALIZATION CODE ATTEMPT 1
+        //create image dropdown selection
+        var uploadImageSelectionColHeader = document.createElement('select')
+        uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
+        try {
+            for (var x = 0; x < uploadFiles.images.length; x++) {
+                var rowImg = document.createElement('option')
+                rowImg.setAttribute('value', uploadFiles.images[x].name)
+                rowImg.innerHTML = `${uploadFiles.images[x].name}`
+                uploadImageSelectionColHeader.appendChild(rowImg)
+            }
+        } catch (err) {
+
+        }
+        //add image dropdown selection to table html
+        console.log('uploadImageSelectionColHeader = ', uploadImageSelectionColHeader)
+        document.getElementById(`upload_${uploadNumber}_table-image-col`).appendChild(uploadImageSelectionColHeader)
+
+        //create dataset
+        let upload_table_files_dataset = await createDataset(uploadFiles, uploadNumber)
+
+        //vars needed for table
+        var reorder = false;
+        var searched = false;
+        var origIndexes = [];
+        var origSeq = [];
+        var origNim = [];
+
+        //create table
+        var upload_table = $(`#upload_${uploadNumber}_table`).DataTable({
+            columns: [
+                { "data": "sequence" },
+                { "data": "#" },
+                { "data": "selectAll" },
+                { "data": "audio" },
+                { "data": "format" },
+                { "data": "length" },
+                { "data": "imgSelection" },
+                { "data": "outputFormat" },
+            ],
+            columnDefs: [
+                {   //sequence
+                    searchable: false,
+                    orderable: false,
+                    visible: false,
+                    targets: 0,
+                },
+                {   //num
+                    searchable: false,
+                    orderable: false,
+                    targets: 1,
+                },
+                {   //select all
+                    "className": 'selectall-checkbox',
+                    "className": "text-center",
+                    searchable: false,
+                    orderable: false,
+                    targets: 2,
+                },
+                {   //audio
+                    targets: 3,
+                    type: "string"
+                },
+                {   //format
+                    targets: 4,
+                    type: "string"
+                },
+                {   //length
+                    targets: 5,
+                    type: "string"
+                },
+                {   //img selection
+                    targets: 6,
+                    //type: "string"
+                },
+                {   //vid format selection
+                    targets: 7,
+                    searchable: false,
+                    orderable: false
+                }
+            ],
+            dom: 'Bfrtip',
+            rowReorder: {
+                dataSrc: 'sequence',
+            },
+            select: {
+                style: 'multi',
+                selector: 'td:nth-child(2)'
+            },
+        });
+        //add dataset to table
+        var count = 1;
+        upload_table_files_dataset.forEach(function (i) {
+            upload_table.row.add({
+                "sequence": i.itemId,
+                "#": count,
+                "selectAll": '<input type="checkbox">',
+                "audio": i.audio,
+                "format": i.format,
+                "length": i.length,
+                "imgSelection": i.imgSelection,
+                "outputFormat": "temp output format selection form",
+           }).node().id = 'rowBrowseId' + i.itemId;
+            count++;
+        });
+        upload_table.draw();
+
+        //when select all checkbox clicked
+        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
+            var rows = upload_table.rows().nodes();
+            $('input[type="checkbox"]', rows).prop('checked', this.checked);
+        });
+
+        //when table is sorted by a column
+        upload_table.on('order.dt', function (e, diff, edit) {
+            //don't adjust "#" column if already changed by rowReorder or search events
+            if (!reorder && !searched) {
+              i = 1;
+              //assign "#" values in row order
+              table.rows({search: 'applied', order: 'applied'}).every( function (rowIdx, tableLoop, rowLoop){
+                var data = this.data();
+                data['#'] = i;
+                i++;
+                this.data(data);
+              });
+            }
+            //reset booleans
+            reorder = false;
+            searched = false;
+        });
+
+        //when tables rows are reordered
+        upload_table.on('row-reorder', function (e, details, edit) {
+            //get original row indexes and original sequence (rowReorder indexes)
+            origIndexes = table.rows().indexes().toArray();
+            origSeq = table.rows().data().pluck('sequence').toArray();
+        });
+
+        //when tables rows are reordered
+        upload_table.on('row-reorder', function (e, diff, edit) {
+            //var result = 'Reorder started on row: ' + edit.triggerRow.data()[1] + '<br>';
+            for (var i = 0, ien = diff.length; i < ien; i++) {
+                var rowData = table.row(diff[i].node).data();
+                //result += rowData[1] + ' updated to be in position ' + diff[i].newData + ' (was ' + diff[i].oldData + ')<br>';
+            }
+            //console.log(result);
+        });
+
+        upload_table.on('row-reordered', function (e, details, edit) {
+            //get current row indexes and sequence (rowReorder indexes)
+            var indexes = upload_table.rows().indexes().toArray();
+            //console.log('org indexes', origIndexes);
+            //console.log('new indexes', indexes);
+            var seq = upload_table.rows().data().pluck('sequence').toArray();
+            //console.log('org seq', origSeq);
+            //console.log('new seq', seq);
+            i = 1;
+            
+            for (var r = 0; r < indexes.length; r++) {
+              //get row data
+              var data = upload_table.row(indexes[r]).data();
+              //console.log('looking for',seq[r]);
+              //get new sequence 
+              //origSeq   [1, 3, 4, 2]
+              //seq       [3, 4, 1, 2]
+              //indexes   [0, 2, 3, 1]
+              //use the new sequence number to find index in origSeq
+              //the (index + 1) is the original row "#" to assign to the current row
+              newSeq = origSeq.indexOf(seq[r]);
+              //console.log('found new seq',newSeq);
+              
+              //assign the new "#" to the current row
+              data['#'] = newSeq + 1;
+              upload_table.row(indexes[r]).data(data);
+              
+            }
+            //re-sort the upload_table by the "#" column
+            upload_table.order([1, 'asc']);
+            
+            //don't adjust the "#" column in the search and order events
+            reorder = true;
+           });
+
+        
+        //image selection changed
+        $(`#upload_${uploadNumber}_table-image-col`).change(function (e) {
+            console.log(`#upload_${uploadNumber}_table-image-col clicked`)
+            var changeThese = document.getElementsByClassName(`upload_${uploadNumber}_table-image-row`)
+            console.log('changeThese = ', changeThese)
+            //set img selection status for every row.. to do
+            //
+            //upload_table.rows().eq(0).each(function (index) {
+            //    var row = upload_table.row(index);
+
+            //    var data = row.data();
+                //console.log("row = ", row)
+            //    data[2] = 'ex'
+            //});
+            //upload_table.draw();
+            
+        });
+
+        */
 
         resolve()
     })
