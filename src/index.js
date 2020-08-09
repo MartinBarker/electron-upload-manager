@@ -423,7 +423,17 @@ async function createDataset(uploadFiles, uploadNumber) {
         resolve(dataSet)
     })
 }
+function setAllVidFormats(uploadNum, rowNum, choice){
 
+    for(var x = 0; x < rowNum; x++){
+        document.getElementById(`upload_${uploadNum}_table-vidFormat-row_${x}`).selectedIndex = `${choice}`
+
+        console.log(`document.getElementById('upload_${uploadNum}_table-vidFormat-row_${x}').selectedIndex = ${choice}`)
+    }
+    //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
+
+    //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
+}
 async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
     return new Promise(async function (resolve, reject) {
@@ -485,8 +495,16 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                             </select> </div>
                                 
                             </th>
-                            <th>Video Output Location</th>
-                           </tr>
+                            <!--
+                            <th>Video Output Folder: 
+                                <div >
+                                    <button id='upload_${uploadNumber}_table-vidLocationButton'>Select</button>
+                                    <input style='display:none' id='upload_${uploadNumber}_table-vidLocation' type="file" webkitdirectory />
+                                </div>
+                            </th>
+                            -->
+                           
+                            </tr>
                         </thead>
                     </table>
                     </div>
@@ -494,8 +512,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             </div>
             
         ` );
-
-        // ATTEMPTY 2
 
         //create image dropdown selection
         var uploadImageSelectionColHeader = document.createElement('select')
@@ -542,7 +558,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 { "data": "length" },
                 { "data": "imgSelection" },
                 { "data": "outputFormat" },
-                { "data": "outputLocation" },
+                //{ "data": "outputLocation" },
             ],
             columnDefs: [
                 {
@@ -580,11 +596,11 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     type: "string",
                     orderable: false,
                 },
-                {
-                    targets: 7,
-                    searchable: false,
-                    orderable: false
-                }
+                //{
+                //    targets: 7,
+                //    searchable: false,
+                //    orderable: false
+                //}
             ],
             dom: 'Bfrtip',
             rowReorder: {
@@ -607,7 +623,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "length": i.length,
                 "imgSelection": i.imgSelection,
                 "outputFormat": i.vidFormatSelection,
-                "outputLocation": "temp output location",
+                //"outputLocation": "temp output location",
             }).node().id = 'rowBrowseId' + i.sampleItemId;
             count++;
         });
@@ -624,14 +640,52 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             } );
         });
 
+  
+
         //video output format selection changed
         $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
+            console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
             let indexValueImgChoice = $(`#upload_${uploadNumber}_table-vidFormat-col`).val()
-            console.log('set all to ', indexValueImgChoice)
-            table.rows().eq(0).each( function ( index ) {
-                document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`).selectedIndex = `${indexValueImgChoice}`
-            } );
+            var rowNum = table.data().count();
+            console.log('rowNum = ', rowNum)
+            //for(var x = 0; x < rowNum; x++){
+            //    document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${x}`).selectedIndex = `${indexValueImgChoice}`
+            //}
+            //table.rows().eq(0).each( function ( index ) {
+                //var elem = document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`)
+                //console.log(`elem = `, elem)
+                //console.log(`elem.selectedIndex = `, elem.selectedIndex)
+                //document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+                //elem.selectedIndex = 1
+                //setAllVidFormats(uploadNum, indexValueImgChoice)
+            //} );
+            //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
+
+            setAllVidFormats(uploadNumber, rowNum, indexValueImgChoice)
         });
+
+        
+
+        //video output location button clicked
+        
+        $(`#upload_${uploadNumber}_table-vidLocationButton`).on('click',function(event) {
+            $(`#upload_${uploadNumber}_table-vidLocation`).click()
+        })
+
+        $(`#upload_${uploadNumber}_table-vidLocation`).change(function(event) {
+            var filePath = document.getElementById(`upload_${uploadNumber}_table-vidLocation`).files[0].path
+            console.log('filePath = ', filePath)
+            console.log('process.platform  =', process.platform)
+            if((process.platform).includes('win')){
+                var parseChar = "\\"
+            }
+            var path = (filePath.substring(0, filePath.lastIndexOf(parseChar)))+parseChar
+            console.log('path = ', path)
+            document.getElementById(`upload_${uploadNumber}_table-vidLocationButton`).innerText = path
+
+        })
+
+        
 
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
