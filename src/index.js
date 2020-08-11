@@ -788,6 +788,74 @@ function getDuration(src) {
     });
 }
 
+async function ffmpegSingleRender(audioPath, imgPath, videoPath){
+    console.log('ffmpeg-test')
+    //require the ffmpeg package so we can use ffmpeg using JS
+    const ffmpeg = require('fluent-ffmpeg');
+    //Get the paths to the packaged versions of the binaries we want to use
+    const ffmpegPath = require('ffmpeg-static').replace(
+        'app.asar',
+        'app.asar.unpacked'
+    );
+    const ffprobePath = require('ffprobe-static').path.replace(
+        'app.asar',
+        'app.asar.unpacked'
+    );
+    //tell the ffmpeg package where it can find the needed binaries.
+    ffmpeg.setFfmpegPath(ffmpegPath);
+    ffmpeg.setFfprobePath(ffprobePath);
+    var audioPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\3. Yaldut.flac"
+    var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\front.jpg"
+    var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\Yaldut.mp4"
+    var outputPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\output.m4v"
+    let proc = await ffmpeg()
+    .input(audioPath)
+    .input(imgPath)
+    // using 25 fps
+    .fps(25)
+    //audio bitrate
+    .audioBitrate('320k')
+    //video bitrate
+    .videoBitrate('8000k', true) //1080p
+    //resolution
+    .size('1920x1080')
+    // setup event handlers
+    .on('end', function() {
+        console.log('file has been converted succesfully');
+    })
+    .on('error', function(err) {
+        console.log('an error happened: ' + err.message);
+    })
+    // save to file
+    .save(videoPath);
+
+    //old under not working
+    /*
+    //convert image to video
+    var proc = ffmpeg(imgPath)
+    // loop for 5 seconds
+    .loop(5)
+    // using 25 fps
+    .fps(25)
+    //audio bitrate
+    .audioBitrate('128k')
+    //video bitrate
+    .videoBitrate('8000k', true)
+    //resolution
+    .size('1920x1080')
+    // setup event handlers
+    .on('end', function() {
+        console.log('file has been converted succesfully');
+    })
+    .on('error', function(err) {
+        console.log('an error happened: ' + err.message);
+    })
+    // save to file
+    .save(outputPath);
+    */
+    console.log("end of ffmpeg-test")
+}
+
 //datatables natural sort plugin code below:
 
 (function() {
