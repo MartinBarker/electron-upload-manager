@@ -8,71 +8,6 @@ updateUploadListDisplay()
 require('datatables.net-dt')();
 require('datatables.net-rowreorder-dt')();
 
-var dataset1 = [
-    ["1", `<input type="checkbox">`, "Ashton Cox", "Junior Technical Author"],
-    ["2", `<input type="checkbox">`, "Cedric Kelly", "Senior Javascript Developer"],
-    ["3", `<input type="checkbox">`, "Airi Satou", "Accountant"],
-];
-
-var table = $('#example').DataTable({
-    columnDefs: [ {
-        "targets": 1,
-        "orderable": false,
-        "className": 'selectall-checkbox',
-        } ],
-    responsive: true,
-    data: dataset1,
-    "dom": "t",
-    select: {
-        style: 'multi',
-        selector: 'td:nth-child(2)'
-    },
-    rowReorder: true,
-    
-    rowReorder: {
-        selector: 'td:nth-child(1)'
-    }
-});
-
-//select all checkbox clicked
-$('#selectAll').on('click', function(event){
-    //get status of select all box (checked == true, unchecked == false)
-    var selectAllStatus = document.getElementById('selectAll').checked
-    //if status == false and the user is trying to deselect all
-    if(!selectAllStatus){
-        //deselect all rows
-        //table.rows().deselect();
-        //uncheck all rows
-        var rows = table.rows().nodes();
-        $('input[type="checkbox"]', rows).prop('checked', this.checked);
-    
-    }else{
-        //if status == true and the user is trying to select all
-        // Get all rows with search applied
-        var rows = table.rows().nodes();
-        // Check/uncheck checkboxes for all rows in the table
-        $('input[type="checkbox"]', rows).prop('checked', this.checked);
-        //trigger select all button
-        //table.button(4).trigger()
-    }
-
-    
- });
-//row-reorder
-table.on( 'row-reorder', function ( e, diff, edit ) {
-    var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
-
-    for ( var i=0, ien=diff.length ; i<ien ; i++ ) {
-        var rowData = table.row( diff[i].node ).data();
-
-        result += rowData[1]+' updated to be in position '+
-            diff[i].newData+' (was '+diff[i].oldData+')<br>';
-    }
-
-    console.log(result );
-} );
-
-
 /*
 Event Listeners
 */
@@ -133,8 +68,8 @@ Function
 function getDatatableContents(datatableID) {
     var table = $(`#${datatableID}`).DataTable();
     var data = table.rows().data();
-    console.log('The table has ' + data.length );
-    for(var i = 0; i < data.length; i++){
+    console.log('The table has ' + data.length);
+    for (var i = 0; i < data.length; i++) {
         console.log(`row[${i}] = `, data[i])
     }
 
@@ -219,76 +154,82 @@ async function getLocalStorage(input) {
     console.log(item)
 }
 
-async function createDataset(uploadFiles, uploadNumber){
+async function renderIndividual(tempVar){
+    console.log('renderIndividual() tempVar = ', tempVar)
+}
+
+async function createDataset(uploadFiles, uploadNumber) {
     return new Promise(async function (resolve, reject) {
-        console.log("createDataset() uploadFiles = ", uploadFiles)
-        var imageSelectionForm = `<select name="cars">`
-        try{
+        //create img selection part of form
+        var imageSelectionOptions = ``
+        try {
             //for each image
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var imagFilename = `${uploadFiles.images[x].name}`
-                imageSelectionForm = imageSelectionForm + `<option value="${imagFilename}">${imagFilename}</option>`  
+                imageSelectionOptions = imageSelectionOptions + `<option value="${imagFilename}">${imagFilename}</option>`
             }
-            //add image dropdown selection to table
-            var imageDiv
-        }catch(err){
+        } catch (err) {
 
         }
-        
-        imageSelectionForm = imageSelectionForm + `</select>`
-        
+    
+        //create dataset
         let dataSet = []
         let fileCount = 1;
-        try{
+        try {
             //for each audio file
-            for(var x = 0; x < uploadFiles['audio'].length; x++){
-                    var audioObj = uploadFiles['audio'][x]
-                    console.log('file = ', audioObj)
-                    let rowObj = [
-                        fileCount, 
-                        '<input type="checkbox">', 
-                        audioObj.name, 
-                        audioObj.type, 
-                        audioObj.length, 
-                        imageSelectionForm,
-                        'vidoutput', 
-                        'vidformat'
-                    ]
-                    ////order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
-                    fileCount++
-                    dataSet.push(rowObj)
-                //}
+            for (var x = 0; x < uploadFiles['audio'].length; x++) {
+                var audioObj = uploadFiles['audio'][x]
+                
+                //create img selection form
+                var imgSelectionSelect = `<select id='upload_${uploadNumber}_table-image-row_${x}' >`
+                imgSelectionSelect = imgSelectionSelect + imageSelectionOptions + `</select>`
+
+                //creaet vid output selection
+                var videoOutputSelection = `
+                <select id='upload_${uploadNumber}_table-vidFormat-row_${x}'>
+                    <option value="0">mp4</option>
+                    <option value="1">avi</option>
+                </select> 
+                `
+
+                //create row obj
+                let rowObj = {
+                    //sequence(leave empty)
+                    itemId: fileCount,
+                    //select box(leave empty)
+                    audio: audioObj.name,
+                    format: audioObj.type,
+                    length: audioObj.length,
+                    imgSelection: imgSelectionSelect,
+                    vidFormatSelection: videoOutputSelection
+                    //video output(leave empty)
+                }
+                fileCount++
+                dataSet.push(rowObj)
             }
-        }catch(err){
+        } catch (err) {
 
         }
-
-        //create image dropdown selection
-        var uploadImageSelectionRowValue = document.createElement('select')
-        uploadImageSelectionRowValue.setAttribute('name', `upload-${uploadNumber}-imageOptions`)
-        uploadImageSelectionRowValue.setAttribute('id', `upload-${uploadNumber}-imageOptions`)
-        try{
-            for (var x = 0; x < uploadFiles.images.length; x++) {
-                var rowImg = document.createElement('option')
-                rowImg.setAttribute('value', uploadFiles.images[x].name)
-                rowImg.innerHTML = `${uploadFiles.images[x].name}`
-                uploadImageSelectionRowValue.appendChild(rowImg)
-            }
-            //add image dropdown selection to table
-            var imageDiv
-        }catch(err){
-
-        }
-        
 
         resolve(dataSet)
     })
 }
+function setAllVidFormats(uploadNum, rowNum, choice){
 
+    for(var x = 0; x < rowNum; x++){
+        document.getElementById(`upload_${uploadNum}_table-vidFormat-row_${x}`).selectedIndex = `${choice}`
+
+        console.log(`document.getElementById('upload_${uploadNum}_table-vidFormat-row_${x}').selectedIndex = ${choice}`)
+    }
+    //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
+
+    //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
+}
 async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
     return new Promise(async function (resolve, reject) {
-        
+
+
         $("#uploadList").append(`
             
             <div id="upload-${uploadNumber}" class="card ml-5 mr-5 mt-5 uploadCard ">
@@ -306,154 +247,394 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
 
                 <!-- Body -->
-                <div id="collapse-example-${uploadNumber}" class="collapse" aria-labelledby="heading-example-${uploadNumber}">
+                <div id="collapse-example-${uploadNumber}" class="collapse show" aria-labelledby="heading-example-${uploadNumber}">
                     <div class="card-body">
-                        Table:
+                        
                         <!-- files table -->
                         <table id="upload_${uploadNumber}_table" class="display filesTable" cellspacing="2" width="100%">
-                        <thead>
-                            <tr> //order, select, audioFilename, audioFormat, audioLength, Image, videoOutput, videoFormat
-                                <th class='order'>#</th>
-                                <th style="text-align: center;"><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
-                                <th id='upload_${uploadNumber}_audioCol'>Audio</th>
-                                <th>Format</th>
-                                <th>Length</th>
-                                <th id='upload_${uploadNumber}_tableImageSelectionColHeader'>
-                                </th>
-                                <th>
-                                    <select name="videoFormats">
-                                        <option value="videoFormat1">videoFormat1</option>
-                                        <option value="videoFormat2">videoFormat2</option>
-                                    </select>
-                                </th>
-                                <th>Video Format</th>
-                            </tr>
-                        </thead>
-                    </table>
+                            <thead> 
+                                <tr>
+                                    <th>sequence</th>
+                                    <th>#</th>
+                                    <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
+                                    <th>Audio</th>
+                                    <th>Format</th>
+                                    <th>Length</th>
+                                    <th>Image: <div id='upload_${uploadNumber}_table-image-col'></div></th>
+                                    <th>
+                                        Video Format: 
+                                        <div>
+                                            <select id='upload_${uploadNumber}_table-vidFormat-col'>
+                                                <option value="0">mp4</option>
+                                                <option value="1">avi</option>
+                                            </select> 
+                                        </div>
+                                    </th>
+                                    <!--
+                                    <th>Video Output Folder: 
+                                        <div >
+                                            <button id='upload_${uploadNumber}_table-vidLocationButton'>Select</button>
+                                            <input style='display:none' id='upload_${uploadNumber}_table-vidLocation' type="file" webkitdirectory />
+                                        </div>
+                                    </th>
+                                    -->
+                                </tr>
+                            </thead>
+                        </table>
+
+                        <!-- Render Individual Button -->
+                        <div class="card ml-5 mr-5 mt-5 renderOption" type='button' onclick="renderIndividual('test')">
+                            <div class='card-body'>
+                                <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render <a id='upload_${uploadNumber}_numChecked'>0</a> individual files
+                            </div>
+                        </div>
+
+                        <!-- Render Full Album Button -->
+                        <div class="card ml-5 mr-5 mt-5 renderOption">
+                            <div class='card-body'>
+                                <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render a Full Album video
+                                    <br>
+                                    Num Tracks: <a id='upload_${uploadNumber}_numCheckedFullAlbum'>0</a>
+                                    </br>
+                                    Length: 43:22
+                                    </br>
+                                    Tracklist:
+                                    <br>
+                                    1. x
+                                    <br>
+                                    2. x
+                                    <br>
+                                    3. z
+                                    <br>
+                                    
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
             
         ` );
-         //create image dropdown selection
-         var uploadImageSelectionColHeader = document.createElement('select')
-         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
-         try{
-            console.log('uploadFiles.images = ', uploadFiles.images)
+
+        /* TABLE ATTEMPT 1 */
+        //create image dropdown selection
+        var uploadImageSelectionColHeader = document.createElement('select')
+        uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
+        try {
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var rowImg = document.createElement('option')
-                console.log('uploadFiles.images[x] = ', uploadFiles.images[x])
-                rowImg.setAttribute('value', uploadFiles.images[x].name)
+                rowImg.setAttribute('value', x)
                 rowImg.innerHTML = `${uploadFiles.images[x].name}`
                 uploadImageSelectionColHeader.appendChild(rowImg)
             }
-         }catch(err){
- 
-         }
-        //set image selection form header
-        document.getElementById(`upload_${uploadNumber}_tableImageSelectionColHeader`).appendChild(uploadImageSelectionColHeader)
-        
+        } catch (err) {
+
+        }
+        //add image dropdown selection to table html
+       document.getElementById(`upload_${uploadNumber}_table-image-col`).appendChild(uploadImageSelectionColHeader)
+
         //create dataset
-        let upload_table_files_dataset = await createDataset(uploadFiles, uploadNumber)
-        
-        //create table
-        var upload_table = $(`#upload_${uploadNumber}_table`).DataTable({
-            columnDefs: [ 
+        let data = await createDataset(uploadFiles, uploadNumber)       
+
+        var reorder = false;
+        var searched = false;
+        var origIndexes = [];
+        var origSeq = [];
+        var origNim = [];
+
+        var table = $(`#upload_${uploadNumber}_table`).DataTable({
+            columns: [
+                { "data": "sequence" },
+                { "data": "#" },
+                { "data": "selectAll" },
+                { "data": "audio" },
+                { "data": "format" },
+                { "data": "length" },
+                { "data": "imgSelection" },
+                { "data": "outputFormat" },
+                //{ "data": "outputLocation" },
+            ],
+            columnDefs: [
                 {
-                    "targets": 0,
-                    "orderable": false,
-                    "className": "text-center",
+                    searchable: false,
+                    orderable: false,
+                    visible: false,
+                    targets: 0,
                 },
                 {
-                    "targets": 1,
-                    "orderable": false,
+                    searchable: false,
+                    orderable: false,
+                    targets: 1,
+                },
+                {
                     "className": 'selectall-checkbox',
                     "className": "text-center",
+                    searchable: false,
+                    orderable: false,
+                    targets: 2,
+                },
+                {   //audio box
+                    targets: 3,
+                    type: "natural"
                 },
                 {
-                    "targets": 2,
-                    //"orderable": false,
-                    "className": "text-left",
+                    targets: 4,
+                    type: "string"
                 },
                 {
-                    "targets": 3,
-                    "orderable": false,
-                    "className": "text-center",
+                    targets: 5,
+                    type: "string"
                 },
                 {
-                    "targets": 4,
-                    "orderable": false,
-                    "className": "text-center",
+                    targets: 6,
+                    type: "string",
+                    orderable: false,
                 },
                 {
-                    "targets": 5,
-                    "orderable": false,
-                    "className": "text-center",
-                },
-                {
-                    "targets": 6,
-                    "orderable": false,
-                    "className": "text-center",
-                },
-                {
-                    "targets": 7,
-                    "orderable": false,
-                    "className": "text-center",
-                }, 
+                    targets: 7,
+                    type: "string",
+                    orderable: false
+                }
             ],
-            responsive: true,
-            data: upload_table_files_dataset,
-            "dom": "t",
+            dom: 'rt',
+            rowReorder: {
+                dataSrc: 'sequence',
+            },
             select: {
                 style: 'multi',
                 selector: 'td:nth-child(2)'
             },
-            rowReorder: true,
-            
-            rowReorder: {
-                selector: 'td:nth-child(1)'
-            }
         });
 
-        //image selection changed
-        $('#upload-1-imageOptionsCol').change(function(e) {
-            console.log(`upload-1-imageOptionsCol clicked`)
-            
-           
-            upload_table.rows().eq(0).each( function ( index ) {
-                var row = upload_table.row( index );
-             
-                var data = row.data();
-                //console.log("row = ", row)
-                console.log("data = ", data)
-                data[2] = 'ex'
-            } );
-            
-            upload_table.draw();
+        var count = 1;
+        data.forEach(function (i) {
+            table.row.add({
+                "sequence": i.itemId,
+                "#": count,
+                "selectAll": '<input type="checkbox">',
+                "audio": i.audio,
+                "format": i.format,
+                "length": i.length,
+                "imgSelection": i.imgSelection,
+                "outputFormat": i.vidFormatSelection,
+                //"outputLocation": "temp output location",
+            }).node().id = 'rowBrowseId' + i.sampleItemId;
+            count++;
         });
-        //audio sort clicked
-        $(`#upload_${uploadNumber}_audioCol`).on('click', function(event){
-            console.log('audio sort clicked')
-        })
-        //select all checkbox clicked
-        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function(event){
-            var selectAllStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
-                var rows = upload_table.rows().nodes();
-                $('input[type="checkbox"]', rows).prop('checked', this.checked);   
-         });
-        //row-reorder
-        upload_table.on( 'row-reorder', function ( e, diff, edit ) {
-            var result = 'Reorder started on row: '+edit.triggerRow.data()[1]+'<br>';
-        
-            for ( var i=0, ien=diff.length ; i<ien ; i++ ) {
-                var rowData = upload_table.row( diff[i].node ).data();
-        
-                result += rowData[1]+' updated to be in position '+
-                    diff[i].newData+' (was '+diff[i].oldData+')<br>';
+        table.draw();
+
+        //image selection changed
+        $(`#upload-${uploadNumber}-imageOptionsCol`).change(function(event) {
+            console.log(`upload-1-imageOptionsCol clicked`)
+            let indexValueImgChoice = $(`#upload-${uploadNumber}-imageOptionsCol`).val()
+            console.log('set all to ', indexValueImgChoice)
+            table.rows().eq(0).each( function ( index ) {
+                console.log('index = ', index)
+                document.getElementById(`upload_${uploadNumber}_table-image-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+            } );
+        });
+
+        //UPDATE NUMBER OF SELECTED ROWS
+        $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {        
+            //determine whether or not to select/deselect & check/uncheck row
+            //var count = table.rows( { selected: true } ).count();
+            //var count = table.rows.find(':checkbox').prop('checked', true);
+            var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
+            document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
+            document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
+
+            
+            //var isSelected = $(this).hasClass('selected')
+            //console.log('isSelected = ', isSelected)
+            //$(this).toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
+            //$(this).toggleClass('selected');
+            /*
+            var $row=$(this) 
+            var isSelected = $row.hasClass('selected')
+            console.log('isSelected = ', isSelected)
+            let deselectOffset = 0;
+            if(isSelected){
+                deselectOffset = 2;
+                $(this).toggleClass('selected')
+            }else{
+                $(this).toggleClass('selected')
             }
-        
-            console.log(result );
+            $row.toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
+
+            //get number of rows selected
+            var selectedCount = table.rows( { selected: true } ).count()+1-deselectOffset;
+            console.log('selectedCount = ', selectedCount)
+            */
+            //update download modal pop 'Selected #'
+            //document.getElementById('productGaps_downloadSelectedDisplay').innerHTML = ` Selected (${selectedCount})`
+        });
+        /*
+        $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {
+            //$(this).toggleClass('selected');
+            var count = table.rows( { selected: true } ).count();
+            console.log('SELECTED COUNT = ', count)
+          });
+      
+          if ( table.rows( '.selected' ).any() ) {
+            console.log( 'Rows are selected' );
+        }
+        //select number changed
+        table.on( 'selected', function ( e, dt, type, indexes ) {
+            var count = table.rows( { selected: true } ).count();
+            console.log('SELECTED COUNT = ', count)
         } );
+        */
+
+        //video output format selection changed
+        $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
+            console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
+            let indexValueImgChoice = $(`#upload_${uploadNumber}_table-vidFormat-col`).val()
+            var rowNum = table.data().count();
+            console.log('rowNum = ', rowNum)
+            //for(var x = 0; x < rowNum; x++){
+            //    document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${x}`).selectedIndex = `${indexValueImgChoice}`
+            //}
+            //table.rows().eq(0).each( function ( index ) {
+                //var elem = document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`)
+                //console.log(`elem = `, elem)
+                //console.log(`elem.selectedIndex = `, elem.selectedIndex)
+                //document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+                //elem.selectedIndex = 1
+                //setAllVidFormats(uploadNum, indexValueImgChoice)
+            //} );
+            //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
+
+            setAllVidFormats(uploadNumber, rowNum, indexValueImgChoice)
+        });
+
+        
+
+        //video output location button clicked
+        
+        $(`#upload_${uploadNumber}_table-vidLocationButton`).on('click',function(event) {
+            $(`#upload_${uploadNumber}_table-vidLocation`).click()
+        })
+
+        $(`#upload_${uploadNumber}_table-vidLocation`).change(function(event) {
+            var filePath = document.getElementById(`upload_${uploadNumber}_table-vidLocation`).files[0].path
+            console.log('filePath = ', filePath)
+            console.log('process.platform  =', process.platform)
+            if((process.platform).includes('win')){
+                var parseChar = "\\"
+            }
+            var path = (filePath.substring(0, filePath.lastIndexOf(parseChar)))+parseChar
+            console.log('path = ', path)
+            document.getElementById(`upload_${uploadNumber}_table-vidLocationButton`).innerText = path
+
+        })
+
+        
+
+        //select all checkbox clicked
+        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
+            var rows = table.rows().nodes();
+            $('input[type="checkbox"]', rows).prop('checked', this.checked);
+            var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
+            document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
+            document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
+        });
+
+        table.on('order.dt', function (e, diff, edit) {
+            console.log('order', reorder, searched);
+
+            //don't adjust "#" column if already changed by rowReorder or search events
+            if (!reorder && !searched) {
+                console.log('order.dt - resetting order');
+                i = 1;
+                //assign "#" values in row order
+                table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+                    var data = this.data();
+                    data['#'] = i;
+                    i++;
+                    this.data(data);
+                });
+            }
+            //reset booleans
+            reorder = false;
+            searched = false;
+
+        });
+        table.on('row-reorder', function (e, details, edit) {
+            console.log('row-reorder');
+            //get original row indexes and original sequence (rowReorder indexes)
+            origIndexes = table.rows().indexes().toArray();
+            origSeq = table.rows().data().pluck('sequence').toArray();
+        });
+
+        table.on('search.dt', function () {
+            console.log('search', reorder);
+            //skip if reorder changed the "#" column order
+            if (!reorder) {
+                console.log('search.dt - resetting order');
+                i = 1;
+                //assign "#" values in row order
+                table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
+                    var data = this.data();
+                    data['#'] = i;
+                    i++;
+                    this.data(data);
+                });
+            }
+            //don't change "#" order in the order event
+            searched = true;
+        });
+
+        table.on('row-reordered', function (e, details, edit) {
+            console.log('row-reorderd');
+            //get current row indexes and sequence (rowReorder indexes)
+            var indexes = table.rows().indexes().toArray();
+            //console.log('org indexes', origIndexes);
+            //console.log('new indexes', indexes);
+            var seq = table.rows().data().pluck('sequence').toArray();
+            //console.log('org seq', origSeq);
+            //console.log('new seq', seq);
+            i = 1;
+
+            for (var r = 0; r < indexes.length; r++) {
+                //get row data
+                var data = table.row(indexes[r]).data();
+                //console.log('looking for',seq[r]);
+                //get new sequence 
+                //origSeq   [1, 3, 4, 2]
+                //seq       [3, 4, 1, 2]
+                //indexes   [0, 2, 3, 1]
+                //use the new sequence number to find index in origSeq
+                //the (index + 1) is the original row "#" to assign to the current row
+                newSeq = origSeq.indexOf(seq[r]);
+                //console.log('found new seq',newSeq);
+
+                //assign the new "#" to the current row
+                data['#'] = newSeq + 1;
+                table.row(indexes[r]).data(data);
+
+            }
+            //re-sort the table by the "#" column
+            table.order([1, 'asc']);
+
+            //don't adjust the "#" column in the search and order events
+            reorder = true;
+        });
+
+        
+        //row-reorder
+        table.on('row-reorder', function (e, diff, edit) {
+            var result = 'Reorder started on row: ' + edit.triggerRow.data()[1] + '<br>';
+
+            for (var i = 0, ien = diff.length; i < ien; i++) {
+                var rowData = table.row(diff[i].node).data();
+
+                result += rowData[1] + ' updated to be in position ' +
+                    diff[i].newData + ' (was ' + diff[i].oldData + ')<br>';
+            }
+
+            console.log(result);
+        });
+
 
         resolve()
     })
@@ -559,11 +740,11 @@ async function newUploadFileDropEvent(event) {
             //get audio length       
             let audioLength = await getDuration(f.path)
             //let audioLength = getAudioDurationInSeconds(f.path).then((duration) => {
-            audioLength = Math.round((audioLength/60) * 100) / 100
+            audioLength = Math.round((audioLength / 60) * 100) / 100
             console.log('audioLength = ', audioLength)
             //    return(duration);
             //});
-            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length':audioLength })
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength })
         }
     }
     newUploadFiles = fileList
@@ -581,10 +762,10 @@ async function newUploadFileDropEvent(event) {
 
         } else if (key == 'audio') {
             //for (const [audioFormat, audioFiles] of Object.entries(newUploadFiles['audio'])) {
-                for (var x = 0; x < value.length; x++) {
-                    //console.log('f = ', audioFiles[x]['name'])
-                    audioFilesHtml = audioFilesHtml + `${value[x]['name']} <br>`
-                }
+            for (var x = 0; x < value.length; x++) {
+                //console.log('f = ', audioFiles[x]['name'])
+                audioFilesHtml = audioFilesHtml + `${value[x]['name']} <br>`
+            }
             //}
         }
     }
@@ -598,266 +779,16 @@ async function newUploadFileDropEvent(event) {
 
 
 function getDuration(src) {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
         var audio = new Audio();
-        $(audio).on("loadedmetadata", function(){
+        $(audio).on("loadedmetadata", function () {
             resolve(audio.duration);
         });
         audio.src = src;
     });
 }
 
-/*
-for (var i = 0; i < uploadsOnPage.length; i++) {
-    var uploadElement = uploadsOnPage[i]
-    //get classes in this element
-    var uploadElementClasses = uploadElement.classList
-    //get uploadNumber from html class
-    for(var value of uploadElementClasses.values()) {
-        if(value.includes('upload-')){
-            var valueStr = value.toString()
-            var uploadNumber = valueStr.split("-")[1]
-        }
-    }
-
-    //event listener for when files are dropped
-    uploadElement.addEventListener('drop', () => fileDropEvent(event))
-
-    uploadElement.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-
-    uploadElement.addEventListener('dragenter', (event) => {
-        console.log('File is in the Drop Space');
-    });
-
-    uploadElement.addEventListener('dragleave', (event) => {
-        console.log('File has left the Drop Space');
-    });
-
-    //uploadCardEventListeners(uploadElement)
-
-}
-*/
-
-/*
-document.addEventListener('drop', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    //sort all files into audio / images
-    var fileList = {'images':[], 'audio':[]}
-    for (const f of event.dataTransfer.files) {
-        // Using the path attribute to get absolute file path
-        //console.log('File Path of dragged files: ', f.path)
-        if((f.type).includes('image')){
-            fileList.images.push({'path':f.path, 'type':f.type, 'name':f.name})
-        }else if((f.type).includes('audio')){
-            var splitType = (f.type).split('/')
-            var audioFormat = splitType[1]
-            if(!fileList.audio[audioFormat]){
-                fileList.audio[audioFormat] = []
-            }
-            fileList.audio[audioFormat].push({'path':f.path, 'type':f.type, 'name':f.name})
-        }
-    }
-
-    //add upload to global uploads[] list
-
-    addUploadCard(globalUploadListCount, fileList)
-    globalUploadListCount++
-
-    //ffmpegTest()
-
-    //var node = document.createElement("LI");
-    //var textnode = document.createTextNode("New Upload");
-    //node.appendChild(textnode);
-    //document.getElementById("uploadList").appendChild(node);
-});
-
-function addUploadCard(number, fileList){
-    console.log("fileList = ", fileList)
-    //create elements
-
-    //card
-    var card = document.createElement('div')
-    card.className = 'card ml-5 mr-5 mt-5'
-
-    //cardHeader
-    var cardHeader = document.createElement('div')
-    cardHeader.className = 'card-header'
-        //row
-        var row = document.createElement('div')
-        row.className = 'row'
-            //col expandable
-            var colExpandable = document.createElement('div')
-            colExpandable.className = 'col expandable'
-                //a collapseable item
-                var aItem = document.createElement('a')
-                aItem.setAttribute('data-toggle', 'collapse')
-                aItem.setAttribute('href', `#collapse-example${number}`)
-                aItem.setAttribute('aria-expanded', 'true')
-                aItem.setAttribute('aria-controls', `collapse-example${number}`)
-                aItem.setAttribute('id', 'heading-example')
-                aItem.setAttribute('class', 'd-block')
-                    //expand/collapse icon
-                    var expandIcon = document.createElement('i')
-                    expandIcon.className = 'fa fa-chevron-down'
-            //col expandable 2
-            var colExpandable2 = document.createElement('div')
-            colExpandable2.className = 'col expandable'
-            colExpandable2.setAttribute('data-toggle', 'collapse')
-            colExpandable2.setAttribute('href', `#collapse-example${number}`)
-            colExpandable2.setAttribute('aria-expanded', 'true')
-                //card title
-                var cardHeaderTitle = document.createElement('p')
-                cardHeaderTitle.innerText = `Upload #${number}`
-            //col expandable 3
-            var colExpandable3 = document.createElement('div')
-            colExpandable3.className = 'col'
-                //close button
-                var closeIcon = document.createElement('i')
-                closeIcon.className = 'fa fa-close pull-right'
-
-    //collapseableElement
-    var collapseableElement = document.createElement('div')
-    collapseableElement.className = 'collapse'
-    collapseableElement.setAttribute('id', `collapse-example${number}`)
-    collapseableElement.setAttribute('aria-labelledby', 'heading-example')
-        //cardBody
-        var cardBody = document.createElement('div')
-        cardBody.className = 'card-body'
-            //cardBodyTitle
-            var cardBodyTitle = document.createElement('div')
-            cardBodyTitle.className = 'card-title'
-            cardBodyTitle.innerHTML = 'Card Body Title'
-            //cardBodyDescription
-            var cardBodyDescription = document.createElement('div')
-            cardBodyDescription.className = 'card-text'
-            cardBodyDescription.innerHTML = 'Card Body Description'
-            //imageSelection
-            var imageDiv = document.createElement('div')
-                //imageSelectionForm
-                var imageSelectionForm = document.createElement('form')
-                    //selectImageText
-                    var selectImageText = document.createElement('p')
-                    selectImageText.innerText = 'Select Image:'
-                    //for each image in fileList
-                    var imageSelectionCards = []
-                    for(var i = 0; i < fileList['images'].length; i++){
-                        //imageSelectionDiv
-                        var imageSelectionDiv = document.createElement('div')
-                        imageSelectionDiv.className = 'border card-body'
-                            //radio input
-                            var imageSelectionInput = document.createElement('input')
-                            imageSelectionInput.setAttribute('type', 'radio')
-                            imageSelectionInput.setAttribute('value', 'radio')
-                            imageSelectionInput.setAttribute('id', `${number}-contactChoice${i}`)
-                            imageSelectionInput.setAttribute('name', `contact`)
-                            imageSelectionInput.setAttribute('value', fileList['images'][i]['name'])
-                            //label
-                            var imageSelectionLabel = document.createElement('label')
-                            imageSelectionLabel.setAttribute('for', `${number}-contactChoice${i}`)
-                            imageSelectionLabel.innerText = `${fileList['images'][i]['name']}  `
-                                //img
-                                var imageSelectionImg = document.createElement('img')
-                                imageSelectionImg.setAttribute('height', '100px')
-                                imageSelectionImg.setAttribute('width', '100px')
-                                imageSelectionImg.setAttribute('src', `${fileList['images'][i]['path']}`)
-                        imageSelectionDiv.appendChild(imageSelectionInput)
-                        imageSelectionDiv.appendChild(imageSelectionLabel)
-                        imageSelectionLabel.appendChild(imageSelectionImg)
-
-                        imageSelectionCards.push(imageSelectionDiv)
-                    }
-
-            //tracklist
-            var tracklistDiv = document.createElement('div')
-            //for each audio type
-            var audioSelectionTypes = []
-            for (const [key, value] of Object.entries(fileList['audio'])) {
-                //select audio form
-                var audioSelectionForm = document.createElement('form')
-                    //select audio text
-                    var selectAudioText = document.createElement('p')
-                    selectAudioText.innerText = `Select ${key} audio files:`
-                    //append text to form
-                    audioSelectionForm.appendChild(selectAudioText)
-                    var audioTrackSelections = []
-                    for(var i = 0; i < value.length; i++){
-                        console.log('track = ', value[i])
-                        var trackSelectionDiv = document.createElement('div')
-                        trackSelectionDiv.className = 'border card-body'
-                            //radio input bubble
-                            var trackSelectionInput = document.createElement('input')
-                            trackSelectionInput.setAttribute('type', 'radio')
-                            trackSelectionInput.setAttribute('value', 'radio')
-                            trackSelectionInput.setAttribute('id', `${number}-${key}-contactChoice${i}`)
-                            trackSelectionInput.setAttribute('name', `contact`)
-                            trackSelectionInput.setAttribute('value', value[i]['name'])
-                            //radio input label
-                            var trackSelectionLabel = document.createElement('label')
-                            trackSelectionLabel.setAttribute('for', `${number}-${key}-contactChoice${i}`)
-                            trackSelectionLabel.innerText = `${value[i]['name']}  `
-                        trackSelectionDiv.appendChild(trackSelectionInput)
-                        trackSelectionDiv.appendChild(trackSelectionLabel)
-
-                        audioSelectionForm.appendChild(trackSelectionDiv)
-                    }
-                    //append download button
-                    var renderButton = document.createElement('div')
-                    renderButton.innerText = `Render `
-
-
-                    //append form to list
-                    audioSelectionTypes.push(audioSelectionForm)
-            }
-
-
-    //append elements
-    document.getElementById("uploadList").appendChild(card);
-    card.appendChild(cardHeader)
-        cardHeader.appendChild(row)
-            row.appendChild(colExpandable)
-                colExpandable.appendChild(aItem)
-                    aItem.appendChild(expandIcon)
-            row.appendChild(colExpandable2)
-                colExpandable2.appendChild(cardHeaderTitle)
-            row.appendChild(colExpandable3)
-                colExpandable3.appendChild(closeIcon)
-    card.appendChild(collapseableElement)
-        collapseableElement.appendChild(cardBody)
-            //cardBody.appendChild(cardBodyTitle)
-            //cardBody.appendChild(cardBodyDescription)
-            cardBody.appendChild(imageDiv)
-                imageDiv.appendChild(imageSelectionForm)
-                    imageSelectionForm.appendChild(selectImageText)
-                        for(var q = 0; q < imageSelectionCards.length; q++){
-                            imageSelectionForm.appendChild(imageSelectionCards[q])
-                        }
-            cardBody.appendChild(tracklistDiv)
-                for(var i = 0; i < audioSelectionTypes.length; i++){
-                    tracklistDiv.appendChild(audioSelectionTypes[i])
-                }
-
-
-}
-
-document.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-});
-
-document.addEventListener('dragenter', (event) => {
-    console.log('File is in the Drop Space');
-});
-
-document.addEventListener('dragleave', (event) => {
-    console.log('File has left the Drop Space');
-});
-
-async function ffmpegTest(){
+async function ffmpegSingleRender(audioPath, imgPath, videoPath){
     console.log('ffmpeg-test')
     //require the ffmpeg package so we can use ffmpeg using JS
     const ffmpeg = require('fluent-ffmpeg');
@@ -873,12 +804,10 @@ async function ffmpegTest(){
     //tell the ffmpeg package where it can find the needed binaries.
     ffmpeg.setFfmpegPath(ffmpegPath);
     ffmpeg.setFfprobePath(ffprobePath);
-
     var audioPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\3. Yaldut.flac"
     var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\front.jpg"
     var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\Yaldut.mp4"
     var outputPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\output.m4v"
-
     let proc = await ffmpeg()
     .input(audioPath)
     .input(imgPath)
@@ -901,6 +830,7 @@ async function ffmpegTest(){
     .save(videoPath);
 
     //old under not working
+    /*
     //convert image to video
     var proc = ffmpeg(imgPath)
     // loop for 5 seconds
@@ -922,8 +852,106 @@ async function ffmpegTest(){
     })
     // save to file
     .save(outputPath);
-
-
+    */
     console.log("end of ffmpeg-test")
 }
-*/
+
+//datatables natural sort plugin code below:
+
+(function() {
+ 
+    /*
+     * Natural Sort algorithm for Javascript - Version 0.7 - Released under MIT license
+     * Author: Jim Palmer (based on chunking idea from Dave Koelle)
+     * Contributors: Mike Grier (mgrier.com), Clint Priest, Kyle Adams, guillermo
+     * See: http://js-naturalsort.googlecode.com/svn/trunk/naturalSort.js
+     */
+    function naturalSort (a, b, html) {
+        var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?%?$|^0x[0-9a-f]+$|[0-9]+)/gi,
+            sre = /(^[ ]*|[ ]*$)/g,
+            dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,
+            hre = /^0x[0-9a-f]+$/i,
+            ore = /^0/,
+            htmre = /(<([^>]+)>)/ig,
+            // convert all to strings and trim()
+            x = a.toString().replace(sre, '') || '',
+            y = b.toString().replace(sre, '') || '';
+            // remove html from strings if desired
+            if (!html) {
+                x = x.replace(htmre, '');
+                y = y.replace(htmre, '');
+            }
+            // chunk/tokenize
+        var xN = x.replace(re, '\0$1\0').replace(/\0$/,'').replace(/^\0/,'').split('\0'),
+            yN = y.replace(re, '\0$1\0').replace(/\0$/,'').replace(/^\0/,'').split('\0'),
+            // numeric, hex or date detection
+            xD = parseInt(x.match(hre), 10) || (xN.length !== 1 && x.match(dre) && Date.parse(x)),
+            yD = parseInt(y.match(hre), 10) || xD && y.match(dre) && Date.parse(y) || null;
+     
+        // first try and sort Hex codes or Dates
+        if (yD) {
+            if ( xD < yD ) {
+                return -1;
+            }
+            else if ( xD > yD ) {
+                return 1;
+            }
+        }
+     
+        // natural sorting through split numeric strings and default strings
+        for(var cLoc=0, numS=Math.max(xN.length, yN.length); cLoc < numS; cLoc++) {
+            // find floats not starting with '0', string or 0 if not defined (Clint Priest)
+            var oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc], 10) || xN[cLoc] || 0;
+            var oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc], 10) || yN[cLoc] || 0;
+            // handle numeric vs string comparison - number < string - (Kyle Adams)
+            if (isNaN(oFxNcL) !== isNaN(oFyNcL)) {
+                return (isNaN(oFxNcL)) ? 1 : -1;
+            }
+            // rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
+            else if (typeof oFxNcL !== typeof oFyNcL) {
+                oFxNcL += '';
+                oFyNcL += '';
+            }
+            if (oFxNcL < oFyNcL) {
+                return -1;
+            }
+            if (oFxNcL > oFyNcL) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+     
+    jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+        "natural-asc": function ( a, b ) {
+            return naturalSort(a,b,true);
+        },
+     
+        "natural-desc": function ( a, b ) {
+            return naturalSort(a,b,true) * -1;
+        },
+     
+        "natural-nohtml-asc": function( a, b ) {
+            return naturalSort(a,b,false);
+        },
+     
+        "natural-nohtml-desc": function( a, b ) {
+            return naturalSort(a,b,false) * -1;
+        },
+     
+        "natural-ci-asc": function( a, b ) {
+            a = a.toString().toLowerCase();
+            b = b.toString().toLowerCase();
+     
+            return naturalSort(a,b,true);
+        },
+     
+        "natural-ci-desc": function( a, b ) {
+            a = a.toString().toLowerCase();
+            b = b.toString().toLowerCase();
+     
+            return naturalSort(a,b,true) * -1;
+        }
+    } );
+     
+    }());
