@@ -186,7 +186,7 @@ async function createDataset(uploadFiles, uploadNumber) {
                 var audioObj = uploadFiles['audio'][x]
                 
                 //create img selection form
-                var imgSelectionSelect = `<select id='upload_${uploadNumber}_table-image-row_${x}' >`
+                var imgSelectionSelect = `<select style='width:150px' id='upload_${uploadNumber}_table-image-row_${x}' >`
                 imgSelectionSelect = imgSelectionSelect + imageSelectionOptions + `</select>`
 
                 //creaet vid output selection
@@ -260,11 +260,16 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                             <thead> 
                                 <tr>
                                     <th>sequence</th>
-                                    <th>#</th>
+                                    <th style='max-width:3px'>#</th>
                                     <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
                                     <th>Audio</th>
-                                    <th>Length</th>
-                                    <th>Image: <div id='upload_${uploadNumber}_table-image-col'></div></th>
+                                    <th style='max-width:58px'>Length</th>
+                                    <th style='max-width:400px'>
+                                        <div >
+                                            <label>Img:</label>
+                                            <div id='upload_${uploadNumber}_table-image-col'></div>
+                                        </div>
+                                    </th>
                                     <th>
                                         Video Format: 
                                         <div>
@@ -324,10 +329,13 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         //create image dropdown selection
         var uploadImageSelectionColHeader = document.createElement('select')
         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
+        uploadImageSelectionColHeader.setAttribute('style', `max-width:150px; text-align: left;`)
+       
         try {
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var rowImg = document.createElement('option')
                 rowImg.setAttribute('value', x)
+                rowImg.setAttribute('style', `width:150px; text-align: left;`)
                 rowImg.innerHTML = `${uploadFiles.images[x].name}`
                 uploadImageSelectionColHeader.appendChild(rowImg)
             }
@@ -369,6 +377,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     searchable: false,
                     orderable: false,
                     targets: 1,
+                    
                 },
                 {//select all checkbox
                     "className": 'selectall-checkbox',
@@ -395,6 +404,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     targets: 5,
                     type: "string",
                     orderable: false,
+                    className: 'text-left'
                 },
                 { //video output format
                     targets: 6,
@@ -446,12 +456,20 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         //UPDATE NUMBER OF SELECTED ROWS
         $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {        
             //determine whether or not to select/deselect & check/uncheck row
-            //var count = table.rows( { selected: true } ).count();
-            //var count = table.rows.find(':checkbox').prop('checked', true);
             var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
             document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
             document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
 
+            /*
+            var rows = $( table.$('input[type="checkbox"]:checked').map(function () {
+                var id = $(this).closest('tr').find('td.Select');
+                console.log('id=', id)
+                return $(this).closest('tr');
+              } ) );
+              console.log('rows=',rows)
+              */
+
+              //IF ROW IS  CHECKED, GET ATTRIBUTES AND STORE THEM
             
             //var isSelected = $(this).hasClass('selected')
             //console.log('isSelected = ', isSelected)
