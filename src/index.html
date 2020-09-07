@@ -33,21 +33,23 @@
       </a>
     </li>
     <!-- render queue button -->
-    <li style='cursor: pointer; display: inline;' class='pull-right ' type='button' data-toggle='modal' data-target="#uploadQueueModal">
+    <li style='cursor: pointer; display: inline;'  type='button' data-toggle='modal' data-target="#uploadQueueModal">
       <a id='uploadQueueBox'>
         Render Queue: <div style='display:inline' id=queueStatus>0</div>
       </a>
-
     </li>
-
-
-
+    <!-- delete all -->
+    <li style='cursor: pointer; display: inline;'  type='button' data-toggle='modal' data-target="#deleteAllModal">
+      <a id='deleteAllBox'>
+        Delete All
+      </a>
+    </li>
 
   </ul>
 
-  <!-- upload list -->
-  <br>
-  <h3 style='text-align: center;'>Upload List</h3>
+  <!-- upload list 
+  <br> -->
+  <h5 style='text-align: center;'>Upload List</h5> 
   <div id='uploadList'></div>
 
   <!-- new upload modal -->
@@ -90,6 +92,31 @@
             onclick="addNewUpload(document.getElementById('modalUploadTitleInput').value)">Create</button>
 
         </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- delete all modal --> 
+  <div class='modal' id='deleteAllModal'>
+    <div class="modal-dialog">
+      <div class="modal-content" >
+
+        <!-- Modal Header -->
+        <div class="modal-header ">
+          <h4 class="modal-title">Delete All</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          Are you sure you want to delete all uploads?
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button style='display:inline'  type="button" class="float-left btn btn-danger" data-dismiss="modal" onclick="deleteAllUploads()">Delete</button>
+        </div> 
 
       </div>
     </div>
@@ -170,7 +197,7 @@ overflow-y : hidden;
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
-    background-color: rgb(48, 187, 102);
+    background-color: rgb(15, 136, 61);
     display: flex;
     /* establish flex container */
     align-items: center;
@@ -180,7 +207,7 @@ overflow-y : hidden;
   }
 
   #newUploadBox:hover {
-    background-color: rgb(56, 107, 76);
+    background-color: rgb(3, 114, 47);
 
   }
 
@@ -194,7 +221,7 @@ overflow-y : hidden;
   }
 
   .uploadIndividual{
-    color: rgb(96, 194, 67);
+    color: rgb(29, 124, 1);
     /*display: block;*/
     margin: auto;
     font-size: 1.4rem;
@@ -205,6 +232,18 @@ overflow-y : hidden;
   .renderOption:hover {
     background-color: rgb(196, 221, 255);
     cursor: pointer;
+  }
+
+  #deleteAllBox{
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    background-color: rgb(223, 74, 74);
+  }
+  #deleteAllBox:hover {
+    background-color:rgb(204, 29, 29);
   }
 
   /* queue navbar */

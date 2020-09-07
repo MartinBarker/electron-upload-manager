@@ -158,6 +158,11 @@ async function renderIndividual(tempVar){
     console.log('renderIndividual() tempVar = ', tempVar)
 }
 
+async function deleteAllUploads(){
+    await localStorage.setItem('uploadList', JSON.stringify({}))
+    document.getElementById('uploadList').innerHTML = ''
+}
+
 async function createDataset(uploadFiles, uploadNumber) {
     return new Promise(async function (resolve, reject) {
         //create img selection part of form
@@ -230,13 +235,13 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     return new Promise(async function (resolve, reject) {
 
 
-        $("#uploadList").append(`
+        $("#uploadList").prepend(`
             
-            <div id="upload-${uploadNumber}" class="card ml-5 mr-5 mt-5 uploadCard ">
+            <div id="upload-${uploadNumber}" class="card uploadCard ">
                 <!-- Header -->
                 <div class="card-header expandable">
-                    <a data-toggle="collapse" href="#collapse-example-${uploadNumber}" aria-expanded="false" aria-controls="collapse-example-${uploadNumber}" class='collapsed' id="heading-example-${uploadNumber}" >
-                        <i class="rotate fa fa-chevron-down "></i>
+                    <a data-toggle="collapse" href="#collapse-example-${uploadNumber}" aria-expanded="false" aria-controls="collapse-example-${uploadNumber}" class=' ' id="heading-example-${uploadNumber}" >
+                        <i class="rotate fa fa-chevron-down " ></i>
                         ${uploadTitle}
                     </a>
 
@@ -258,7 +263,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                     <th>#</th>
                                     <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
                                     <th>Audio</th>
-                                    <th>Format</th>
                                     <th>Length</th>
                                     <th>Image: <div id='upload_${uploadNumber}_table-image-col'></div></th>
                                     <th>
@@ -348,54 +352,59 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 { "data": "#" },
                 { "data": "selectAll" },
                 { "data": "audio" },
-                { "data": "format" },
+                //{ "data": "format" },
                 { "data": "length" },
                 { "data": "imgSelection" },
                 { "data": "outputFormat" },
                 //{ "data": "outputLocation" },
             ],
             columnDefs: [
-                {
+                { //invisible sequence num
                     searchable: false,
                     orderable: false,
                     visible: false,
                     targets: 0,
                 },
-                {
+                { //visible sequence num
                     searchable: false,
                     orderable: false,
                     targets: 1,
                 },
-                {
+                {//select all checkbox
                     "className": 'selectall-checkbox',
                     "className": "text-center",
                     searchable: false,
                     orderable: false,
                     targets: 2,
                 },
-                {   //audio box
+                {//audio filename 
                     targets: 3,
                     type: "natural"
                 },
-                {
+                /*
+                {//audio format
                     targets: 4,
                     type: "string"
                 },
-                {
-                    targets: 5,
+                */
+                { //audio file length
+                    targets: 4,
                     type: "string"
                 },
-                {
-                    targets: 6,
+                { //image selection
+                    targets: 5,
                     type: "string",
                     orderable: false,
                 },
-                {
-                    targets: 7,
+                { //video output format
+                    targets: 6,
                     type: "string",
                     orderable: false
                 }
             ],
+            "language": {
+                "emptyTable": "No files in this upload"
+              },
             dom: 'rt',
             rowReorder: {
                 dataSrc: 'sequence',
@@ -413,7 +422,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "#": count,
                 "selectAll": '<input type="checkbox">',
                 "audio": i.audio,
-                "format": i.format,
+                //"format": 'adasd',//i.format,
                 "length": i.length,
                 "imgSelection": i.imgSelection,
                 "outputFormat": i.vidFormatSelection,
