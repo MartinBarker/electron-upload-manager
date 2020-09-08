@@ -300,21 +300,16 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
                         <!-- Render Full Album Button -->
                         <div class="card ml-5 mr-5 mt-5 renderOption">
-                            <div class='card-body'>
+                            <div class='card-body' id='upload_${uploadNumber}_fullAlbumButton'>
                                 <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render a Full Album video
                                     <br>
                                     Num Tracks: <a id='upload_${uploadNumber}_numCheckedFullAlbum'>0</a>
                                     </br>
-                                    Length: 43:22
+                                    Length: <a id='upload_${uploadNumber}_fullAlbumLength'>00:00</a>
                                     </br>
                                     Tracklist:
-                                    <br>
-                                    1. x
-                                    <br>
-                                    2. x
-                                    <br>
-                                    3. z
-                                    <br>
+                                    <div id='upload_${uploadNumber}_fullAlbumTracklist'>
+                                    </div>
                                     
                             </div>
                         </div>
@@ -355,6 +350,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         var origNim = [];
 
         var table = $(`#upload_${uploadNumber}_table`).DataTable({
+            select: {
+                style: 'multi',
+                selector: 'td:nth-child(2)'
+            },
             columns: [
                 { "data": "sequence" },
                 { "data": "#" },
@@ -419,10 +418,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             rowReorder: {
                 dataSrc: 'sequence',
             },
-            select: {
-                style: 'multi',
-                selector: 'td:nth-child(2)'
-            },
+            
         });
 
         var count = 1;
@@ -453,6 +449,13 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             } );
         });
 
+        /*
+        //prevent clicking form selection from selecting/deselcting row
+        $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'select', function (e) {
+            e.stopPropagation();
+          } );
+          */
+
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
             let checkedStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
@@ -477,9 +480,9 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         //row clicked
         $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {        
             //determine whether or not to select/deselect & check/uncheck row
-            var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
-            document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
-            document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
+            //var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
+            //document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
+            //document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
             
             var isSelected = $(this).hasClass('selected')
             $(this).toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
@@ -640,12 +643,40 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 }
 
 async function updateFullAlbumDisplayInfo(table, uploadNumber){
+    //get all selected rows
     var selectedRows = table.rows( '.selected' ).data()
-    console.log('selectedRows = ', selectedRows)
+    //get number of selected tracks
+    var count = selectedRows.length;
+    //get total length of full album vid
+    var fullAlbumLength = ''
+    var fullAlbumTracklist = ''
+    for(var i = 0; i < count; i++){
+        fullAlbumTracklist = `${fullAlbumTracklist}${selectedRows[i].audio}<br>`
+        //set prevTime
+        var prevTime = ''
+        if(fullAlbumLength == ''){
+            prevTime = '0:00:00'
+        }else{
+            prevTime = fullAlbumLength
+        }
+        //set currTime
+        var currTime = selectedRows[i].length
+        //calculate sum
+        fullAlbumLength = sum(prevTime , currTime );
+    }
+    //set fullAlbumLength var
+    document.getElementById(`upload_${uploadNumber}_fullAlbumLength`).innerText = fullAlbumLength
+    //get tracklist
 
-    var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
-            document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
-            document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
+    //set tracklist
+    document.getElementById(`upload_${uploadNumber}_fullAlbumTracklist`).innerHTML = fullAlbumTracklist
+    
+    //set count
+    document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
+    document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
+
+    
+
 }
 
 async function updateUploadListDisplay() {
@@ -741,22 +772,18 @@ async function newUploadFileDropEvent(event) {
         } else if ((f.type).includes('audio')) {
             var splitType = (f.type).split('/')
             var audioFormat = splitType[1]
-            //if audioformat is not in object
-            //if (!fileList.audio[audioFormat]) {
-            //    fileList.audio[audioFormat] = []
-            //}
-            //get audio length       
+       
             let audioLength = await getDuration(f.path)
-            //let audioLength = getAudioDurationInSeconds(f.path).then((duration) => {
-            audioLength = Math.round((audioLength / 60) * 100) / 100
-            console.log('audioLength = ', audioLength)
-            //    return(duration);
-            //});
+            console.log('raw audioLength = ', audioLength)
+            audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
+     
             fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength })
         }
     }
     newUploadFiles = fileList
     console.log('newUploadFiles = ', newUploadFiles)
+
+    
 
     //display files in UI
     var imageFilesHtml = ''
@@ -785,6 +812,20 @@ async function newUploadFileDropEvent(event) {
     //addNewUpload(fileList)
 }
 
+function sum(date1, date2){
+    date1 = date1.split(":");
+    date2 = date2.split(":");
+    const result = [];
+  
+    date1.reduceRight((carry,num, index) => {
+      const max = [24,60,60][index];
+      const add =  +date2[index];
+      result.unshift( (+num+add+carry) % max );
+      return Math.floor( (+num + add + carry) / max );
+    },0);
+  
+    return result.map(r => String(r).padStart(2, "0")).join(":");
+  }
 
 function getDuration(src) {
     return new Promise(function (resolve) {
