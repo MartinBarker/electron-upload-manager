@@ -353,6 +353,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         var origNim = [];
 
         var table = $(`#upload_${uploadNumber}_table`).DataTable({
+            "pageLength": 5000,
             select: {
                 style: 'multi',
                 selector: 'td:nth-child(2)'
