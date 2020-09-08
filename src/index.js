@@ -453,64 +453,43 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             } );
         });
 
-        //UPDATE NUMBER OF SELECTED ROWS
+        //select all checkbox clicked
+        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
+            let checkedStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
+            if(checkedStatus == true){
+                //box is going from unchecked to checked, so select all
+                var rows = table.rows().nodes();
+                $('input[type="checkbox"]', rows).prop('checked', true);
+                table.$("tr").addClass('selected')
+            }else{
+                //unselect all
+                var rows = table.rows().nodes();
+                $('input[type="checkbox"]', rows).prop('checked', false);
+                table.$("tr").removeClass('selected')
+                
+                
+            }
+            
+            updateFullAlbumDisplayInfo(table, uploadNumber)
+            
+        });
+
+        //row clicked
         $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {        
             //determine whether or not to select/deselect & check/uncheck row
             var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
             document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
             document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
-
-            /*
-            var rows = $( table.$('input[type="checkbox"]:checked').map(function () {
-                var id = $(this).closest('tr').find('td.Select');
-                console.log('id=', id)
-                return $(this).closest('tr');
-              } ) );
-              console.log('rows=',rows)
-              */
-
-              //IF ROW IS  CHECKED, GET ATTRIBUTES AND STORE THEM
             
-            //var isSelected = $(this).hasClass('selected')
-            //console.log('isSelected = ', isSelected)
-            //$(this).toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
-            //$(this).toggleClass('selected');
-            /*
-            var $row=$(this) 
-            var isSelected = $row.hasClass('selected')
-            console.log('isSelected = ', isSelected)
-            let deselectOffset = 0;
-            if(isSelected){
-                deselectOffset = 2;
-                $(this).toggleClass('selected')
-            }else{
-                $(this).toggleClass('selected')
-            }
-            $row.toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
+            var isSelected = $(this).hasClass('selected')
+            $(this).toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
 
-            //get number of rows selected
-            var selectedCount = table.rows( { selected: true } ).count()+1-deselectOffset;
-            console.log('selectedCount = ', selectedCount)
-            */
-            //update download modal pop 'Selected #'
-            //document.getElementById('productGaps_downloadSelectedDisplay').innerHTML = ` Selected (${selectedCount})`
+            updateFullAlbumDisplayInfo(table, uploadNumber)
+   
+            
+            
         });
-        /*
-        $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {
-            //$(this).toggleClass('selected');
-            var count = table.rows( { selected: true } ).count();
-            console.log('SELECTED COUNT = ', count)
-          });
-      
-          if ( table.rows( '.selected' ).any() ) {
-            console.log( 'Rows are selected' );
-        }
-        //select number changed
-        table.on( 'selected', function ( e, dt, type, indexes ) {
-            var count = table.rows( { selected: true } ).count();
-            console.log('SELECTED COUNT = ', count)
-        } );
-        */
+        
 
         //video output format selection changed
         $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
@@ -557,14 +536,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         
 
-        //select all checkbox clicked
-        $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
-            var rows = table.rows().nodes();
-            $('input[type="checkbox"]', rows).prop('checked', this.checked);
-            var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
-            document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
-            document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
-        });
+        
 
         table.on('order.dt', function (e, diff, edit) {
             console.log('order', reorder, searched);
@@ -665,6 +637,15 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         resolve()
     })
+}
+
+async function updateFullAlbumDisplayInfo(table, uploadNumber){
+    var selectedRows = table.rows( '.selected' ).data()
+    console.log('selectedRows = ', selectedRows)
+
+    var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
+            document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
+            document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
 }
 
 async function updateUploadListDisplay() {
