@@ -456,6 +456,28 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
           } );
           */
 
+        $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e){
+            console.log('fac')
+            var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
+            console.log('fac uploadList=', uploadList)
+            var upload = uploadList[`upload-${uploadNumber}`]
+            console.log('fac upload=', upload)
+
+            /*
+            console.log('FAC uploadList=', uploadList)
+            //get full album info
+            //get all selected rows
+            var selectedRows = table.rows( '.selected' ).data()
+            console.log('FA selectedRows=', selectedRows)
+
+
+            var count = selectedRows.length;
+            for(var i = 0; i < count; i++){
+                console.log(selectedRows[i].audio)
+            }
+            */
+        })
+
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
             let checkedStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
