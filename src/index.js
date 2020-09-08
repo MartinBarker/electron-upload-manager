@@ -1,4 +1,5 @@
 var newUploadFiles = {}
+
 /* 
 run this code when the page first loads 
 */
@@ -206,7 +207,8 @@ async function createDataset(uploadFiles, uploadNumber) {
                     format: audioObj.type,
                     length: audioObj.length,
                     imgSelection: imgSelectionSelect,
-                    vidFormatSelection: videoOutputSelection
+                    vidFormatSelection: videoOutputSelection,
+                    audioFilepath: audioObj.path,
                     //video output(leave empty)
                 }
                 fileCount++
@@ -279,6 +281,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                             </select> 
                                         </div>
                                     </th>
+                                    <th>audioFilepath</th>
                                     <!--
                                     <th>Video Output Folder: 
                                         <div >
@@ -363,7 +366,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 { "data": "length" },
                 { "data": "imgSelection" },
                 { "data": "outputFormat" },
-                //{ "data": "outputLocation" },
+                { "data": "audioFilepath" },
             ],
             columnDefs: [
                 { //invisible sequence num
@@ -409,6 +412,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     targets: 6,
                     type: "string",
                     orderable: false
+                },
+                {//audioFilepath
+                    targets:7,
+                    visible:false,
                 }
             ],
             "language": {
@@ -433,6 +440,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "imgSelection": i.imgSelection,
                 "outputFormat": i.vidFormatSelection,
                 //"outputLocation": "temp output location",
+                "audioFilepath":i.audioFilepath,
             }).node().id = 'rowBrowseId' + i.sampleItemId;
             count++;
         });
@@ -457,25 +465,121 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
           */
 
         $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e){
-            console.log('fac')
+            console.log('FA()')
             var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
-            console.log('fac uploadList=', uploadList)
+            //console.log('fac uploadList=', uploadList)
             var upload = uploadList[`upload-${uploadNumber}`]
-            console.log('fac upload=', upload)
+            //console.log('fac upload=', upload)
 
-            /*
-            console.log('FAC uploadList=', uploadList)
-            //get full album info
-            //get all selected rows
             var selectedRows = table.rows( '.selected' ).data()
-            console.log('FA selectedRows=', selectedRows)
+            console.log('FA() selectedRows=', selectedRows)
 
 
             var count = selectedRows.length;
             for(var i = 0; i < count; i++){
-                console.log(selectedRows[i].audio)
+                //console.log('filepath=', selectedRows[i].audioFilepath)
             }
+            
+            const ffmpeg = require('fluent-ffmpeg');
+            //Get the paths to the packaged versions of the binaries we want to use
+            const ffmpegPath = require('ffmpeg-static').replace(
+                'app.asar',
+                'app.asar.unpacked'
+            );
+            const ffprobePath = require('ffprobe-static').path.replace(
+                'app.asar',
+                'app.asar.unpacked'
+            );
+            //tell the ffmpeg package where it can find the needed binaries.
+            ffmpeg.setFfmpegPath(ffmpegPath);
+            ffmpeg.setFfprobePath(ffprobePath);
+            var audioPath = selectedRows[1].audioFilepath;
+            //var audioPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\01 back from the moon.mp3"
+            var imgPath = upload.files.images[0].path; 
+            //var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\front.jpg"
+            var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\ffmpegtestoutputnodejs.m4v"
+
+
+            const command = ffmpeg();
+       
+            const audioFiles = ['C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\01 back from the moon.mp3', 'C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\02 love me not.mp3'];
+            audioFiles.forEach((fileName)=>{
+                command.input(fileName);
+            })
+            command
+                    .complexFilter([
+                        '[0]adelay=1000|1000[a]',
+                        '[1]adelay=4000|4000[b]',
+                        '[a][b]amix=2'
+                    ])
+                    .videoCodec('copy')
+                    .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\concat-autio.mp4')
+                    .on('codecData', function(data) {
+                        console.log('codecData=',data);
+                    })
+                    .on('progress', function({ percent }) {
+                        console.log('progress percent: ' + percent);
+                    })
+                    .on('end', function() {
+                        console.log('file has been converted succesfully');
+                    })
+                    .on('error', function(err) {
+                        console.log('an error happened: ' + err.message);
+                    })
+                    command.run()
+            /*
+            var proc = ffmpeg(imgPath)
+            // loop for 5 seconds
+            .loop(5)
+            // using 25 fps
+            .fps(25)
+            // setup event handlers
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('progress', function({ percent }) {
+                console.log('progress percent: ' + percent);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully');
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+            })
+            // save to file
+            .save(videoPath);
             */
+            
+            //single vid
+            /*
+            let proc = await ffmpeg()
+            .input(audioPath)
+            .input(imgPath)
+            // using 25 fps
+            .fps(25)
+            //audio bitrate
+            .audioBitrate('320k')
+            //video bitrate
+            .videoBitrate('8000k', true) //1080p
+            //resolution
+            .size('1920x1080')
+            // setup event handlers
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('progress', function({ percent }) {
+                console.log('progress percent: ' + percent);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully');
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+            })
+            // save to file
+            .save(videoPath).run();
+            */
+            
         })
 
         //select all checkbox clicked
@@ -862,7 +966,7 @@ function getDuration(src) {
 async function ffmpegSingleRender(audioPath, imgPath, videoPath){
     console.log('ffmpeg-test')
     //require the ffmpeg package so we can use ffmpeg using JS
-    const ffmpeg = require('fluent-ffmpeg');
+    //const ffmpeg = require('fluent-ffmpeg');
     //Get the paths to the packaged versions of the binaries we want to use
     const ffmpegPath = require('ffmpeg-static').replace(
         'app.asar',
