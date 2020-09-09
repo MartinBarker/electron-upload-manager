@@ -500,21 +500,87 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\front.jpg"
             var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\ffmpegtestoutputnodejs.m4v"
 
+/*
+            ffmpeg()
+            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\front.jpg')
+            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\02 - she.mp3')
+            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\03 - indian song.mp3')
+            .on('start', function(cmdline) {
+                console.log('start: Command line: ' + cmdline);
+            })
+            .on('progress', function(progress) {
+                console.info(`Processing : ${progress.percent} % done`);
+            })
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully');
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+            })
+            .mergeToFile('C:\\Users\\marti\\Documents\\martinradio\\uploads\\merged2.mp4', 'C:\\Users\\marti\\Documents\\martinradio\\uploads\\tempDir').output('C:\\Users\\marti\\Documents\\martinradio\\uploads\\merged2.mp4').run()
+*/
 
             const command = ffmpeg();
-       
-            const audioFiles = ['C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\01 back from the moon.mp3', 'C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\02 love me not.mp3'];
-            audioFiles.forEach((fileName)=>{
-                command.input(fileName);
+            
+            /*
+            var count = selectedRows.length;
+            let inputFiles = []
+            for(var i = 0; i < count; i++){
+                command.addInput(selectedRows[i].audioFilepath)
+                console.log('adding input=', selectedRows[i].audioFilepath)
+            }
+            */
+
+            command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\front.jpg')
+            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\02 - she.mp3')         //04:02 
+            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\03 - indian song.mp3') //05:43
+            .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\mergedAudio.mp4')
+            //.mergeToFile('C:\\Users\\marti\\Documents\\martinradio\\uploads\\mergedAudio.mp4', 'C:\\Users\\marti\\Documents\\martinradio\\uploads\\tempDir')
+            .on('start', function(cmdline) {
+                console.log('start: Command line: ' + cmdline);
             })
+            .on('progress', function(progress) {
+                console.info(`Processing : ${progress.percent} % done`);
+            })
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully');
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+            }).run()
+ /*
+            let inputNamesFormatted = 'concat:' + inputFiles.join('|');
+            let cmd = ffmpeg()
+                .on('start', function(cmdline) {
+                    console.log('start: Command line: ' + cmdline);
+                })
+                .on('progress', function(progress) {
+                    console.info(`Processing : ${progress.percent} % done`);
+                })
+                .on('codecData', function(data) {
+                    console.log('codecData=',data);
+                })
+                .on('end', function() {
+                    console.log('file has been converted succesfully');
+                })
+                .on('error', function(err) {
+                    console.log('an error happened: ' + err.message);
+                })
+                .input(inputNamesFormatted)
+                .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\concat-audiioooo.mp4')
+                .outputOption('-strict -2')     // I have an issue with experimental codecs, it is a solution
+                .outputOption('-bsf:a aac_adtstoasc')
+                .videoCodec('copy').run()
+        
             command
-                    .complexFilter([
-                        '[0]adelay=1000|1000[a]',
-                        '[1]adelay=4000|4000[b]',
-                        '[a][b]amix=2'
-                    ])
-                    .videoCodec('copy')
-                    .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\concat-autio.mp4')
+                    
+                    .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\concat-autio.mp4')
                     .on('codecData', function(data) {
                         console.log('codecData=',data);
                     })
@@ -528,7 +594,9 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                         console.log('an error happened: ' + err.message);
                     })
                     command.run()
-            /*
+
+
+           
             var proc = ffmpeg(imgPath)
             // loop for 5 seconds
             .loop(5)
