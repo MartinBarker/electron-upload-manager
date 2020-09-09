@@ -500,15 +500,25 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\front.jpg"
             var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\ffmpegtestoutputnodejs.m4v"
 
-/*
-            ffmpeg()
-            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\front.jpg')
-            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\02 - she.mp3')
-            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\03 - indian song.mp3')
-            .on('start', function(cmdline) {
-                console.log('start: Command line: ' + cmdline);
-            })
-            .on('progress', function(progress) {
+            var path = require('path');
+            var outputDir = path.dirname(selectedRows[0].audioFilepath)
+            console.log('outputDir = ', outputDir)
+            var outputFile = `${outputDir}/MERGED2.mp3`
+
+
+            const command = ffmpeg();
+            var count = selectedRows.length;
+            for(var i = 0; i < count; i++){
+                command.input(selectedRows[i].audioFilepath)
+            }    
+
+           command.mergeToFile(outputFile) //'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\Greatest Hits Volume 2\\mergedAudiox.mp3')
+           //
+           //.audioCodec('libmp3lame')
+           //.audioQuality(0)
+           //.audioChannels(1)
+           //.outputOptions('-fs', 3000000)
+           .on('progress', function(progress) {
                 console.info(`Processing : ${progress.percent} % done`);
             })
             .on('codecData', function(data) {
@@ -519,20 +529,18 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             })
             .on('error', function(err) {
                 console.log('an error happened: ' + err.message);
-            })
-            .mergeToFile('C:\\Users\\marti\\Documents\\martinradio\\uploads\\merged2.mp4', 'C:\\Users\\marti\\Documents\\martinradio\\uploads\\tempDir').output('C:\\Users\\marti\\Documents\\martinradio\\uploads\\merged2.mp4').run()
-*/
+            }).output(outputFile) //'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\Greatest Hits Volume 2\\mergedAudiox.mp3').run()
 
-            const command = ffmpeg();
+            command.audioQuality(0).run()
             
             /*
+            const command = ffmpeg();
             var count = selectedRows.length;
             let inputFiles = []
             for(var i = 0; i < count; i++){
                 command.addInput(selectedRows[i].audioFilepath)
                 console.log('adding input=', selectedRows[i].audioFilepath)
             }
-            */
 
             command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\front.jpg')
             .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\02 - she.mp3')         //04:02 
@@ -554,7 +562,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             .on('error', function(err) {
                 console.log('an error happened: ' + err.message);
             }).run()
- /*
+
             let inputNamesFormatted = 'concat:' + inputFiles.join('|');
             let cmd = ffmpeg()
                 .on('start', function(cmdline) {
