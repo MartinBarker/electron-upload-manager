@@ -510,6 +510,27 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             var count = selectedRows.length;
             for(var i = 0; i < count; i++){
                 command.input(selectedRows[i].audioFilepath)
+            }   
+            command.on('progress', function(progress) {
+                console.info(`Processing : ${progress.percent} % done`);
+            })
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully');
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+            })
+        
+            command.audioBitrate('320k').mergeToFile(outputFile);
+
+            /*
+            const command = ffmpeg();
+            var count = selectedRows.length;
+            for(var i = 0; i < count; i++){
+                command.input(selectedRows[i].audioFilepath)
             }    
 
            command.mergeToFile(outputFile) //'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\Greatest Hits Volume 2\\mergedAudiox.mp3')
@@ -532,6 +553,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             }).output(outputFile) //'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\Greatest Hits Volume 2\\mergedAudiox.mp3').run()
 
             command.audioQuality(0).run()
+            */
             
             /*
             const command = ffmpeg();
