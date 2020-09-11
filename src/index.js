@@ -464,223 +464,44 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             e.stopPropagation();
           } );
           */
-
+        
         $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e){
-            console.log('FA()')
-            var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
-            //console.log('fac uploadList=', uploadList)
-            var upload = uploadList[`upload-${uploadNumber}`]
-            //console.log('fac upload=', upload)
-
-            var selectedRows = table.rows( '.selected' ).data()
-            console.log('FA() selectedRows=', selectedRows)
-
-
-            var count = selectedRows.length;
-            for(var i = 0; i < count; i++){
-                //console.log('filepath=', selectedRows[i].audioFilepath)
-            }
+            console.log('Begin Concat Audio Command')
             
-            const ffmpeg = require('fluent-ffmpeg');
-            //Get the paths to the packaged versions of the binaries we want to use
-            const ffmpegPath = require('ffmpeg-static').replace(
-                'app.asar',
-                'app.asar.unpacked'
-            );
-            const ffprobePath = require('ffprobe-static').path.replace(
-                'app.asar',
-                'app.asar.unpacked'
-            );
-            //tell the ffmpeg package where it can find the needed binaries.
-            ffmpeg.setFfmpegPath(ffmpegPath);
-            ffmpeg.setFfprobePath(ffprobePath);
-            var audioPath = selectedRows[1].audioFilepath;
-            //var audioPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\01 back from the moon.mp3"
-            var imgPath = upload.files.images[0].path; 
-            //var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\Movers - 1970 greatest hits vol. 2\\front.jpg"
-            var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\ffmpegtestoutputnodejs.m4v"
 
+            
+            //get selected rows and timestamp
+            var selectedRows = table.rows( '.selected' ).data()
+            var timestamp = new Date().getUTCMilliseconds();
+
+            //let concatAudioFilepath = await generateConcatAudio(selectedRows, timestamp)
+            let realConcatAudioFilepath = await generateConcatAudio(selectedRows)
+
+            
+            //console.log('concatAudioFilepath = ', concatAudioFilepath)
+            console.log('realConcatAudioFilepath = ', realConcatAudioFilepath)
+
+            //get img input
+            var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
+            var upload = uploadList[`upload-${uploadNumber}`]
+            let imgInput = upload.files.images[0].path
+            //get vid output
             var path = require('path');
             var outputDir = path.dirname(selectedRows[0].audioFilepath)
-            console.log('outputDir = ', outputDir)
-            var outputFile = `${outputDir}/MERGED2.mp3`
+            var vidOutput = `${outputDir}/fullAlbum.mp4`
+            //generate vid
+            let vidStatus = await generateVid(realConcatAudioFilepath, imgInput, vidOutput)
 
-
-            const command = ffmpeg();
-            var count = selectedRows.length;
-            for(var i = 0; i < count; i++){
-                command.input(selectedRows[i].audioFilepath)
-            }   
-            command.on('progress', function(progress) {
-                console.info(`Processing : ${progress.percent} % done`);
-            })
-            .on('codecData', function(data) {
-                console.log('codecData=',data);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully');
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-            })
-        
-            command.audioBitrate('320k').mergeToFile(outputFile);
-
-            /*
-            const command = ffmpeg();
-            var count = selectedRows.length;
-            for(var i = 0; i < count; i++){
-                command.input(selectedRows[i].audioFilepath)
-            }    
-
-           command.mergeToFile(outputFile) //'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\Greatest Hits Volume 2\\mergedAudiox.mp3')
-           //
-           //.audioCodec('libmp3lame')
-           //.audioQuality(0)
-           //.audioChannels(1)
-           //.outputOptions('-fs', 3000000)
-           .on('progress', function(progress) {
-                console.info(`Processing : ${progress.percent} % done`);
-            })
-            .on('codecData', function(data) {
-                console.log('codecData=',data);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully');
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-            }).output(outputFile) //'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\Greatest Hits Volume 2\\mergedAudiox.mp3').run()
-
-            command.audioQuality(0).run()
-            */
-            
-            /*
-            const command = ffmpeg();
-            var count = selectedRows.length;
-            let inputFiles = []
-            for(var i = 0; i < count; i++){
-                command.addInput(selectedRows[i].audioFilepath)
-                console.log('adding input=', selectedRows[i].audioFilepath)
-            }
-
-            command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\front.jpg')
-            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\02 - she.mp3')         //04:02 
-            .input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\bookert\\03 - indian song.mp3') //05:43
-            .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\mergedAudio.mp4')
-            //.mergeToFile('C:\\Users\\marti\\Documents\\martinradio\\uploads\\mergedAudio.mp4', 'C:\\Users\\marti\\Documents\\martinradio\\uploads\\tempDir')
-            .on('start', function(cmdline) {
-                console.log('start: Command line: ' + cmdline);
-            })
-            .on('progress', function(progress) {
-                console.info(`Processing : ${progress.percent} % done`);
-            })
-            .on('codecData', function(data) {
-                console.log('codecData=',data);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully');
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-            }).run()
-
-            let inputNamesFormatted = 'concat:' + inputFiles.join('|');
-            let cmd = ffmpeg()
-                .on('start', function(cmdline) {
-                    console.log('start: Command line: ' + cmdline);
-                })
-                .on('progress', function(progress) {
-                    console.info(`Processing : ${progress.percent} % done`);
-                })
-                .on('codecData', function(data) {
-                    console.log('codecData=',data);
-                })
-                .on('end', function() {
-                    console.log('file has been converted succesfully');
-                })
-                .on('error', function(err) {
-                    console.log('an error happened: ' + err.message);
-                })
-                .input(inputNamesFormatted)
-                .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\concat-audiioooo.mp4')
-                .outputOption('-strict -2')     // I have an issue with experimental codecs, it is a solution
-                .outputOption('-bsf:a aac_adtstoasc')
-                .videoCodec('copy').run()
-        
-            command
-                    
-                    .save('C:\\Users\\marti\\Documents\\martinradio\\uploads\\concat-autio.mp4')
-                    .on('codecData', function(data) {
-                        console.log('codecData=',data);
-                    })
-                    .on('progress', function({ percent }) {
-                        console.log('progress percent: ' + percent);
-                    })
-                    .on('end', function() {
-                        console.log('file has been converted succesfully');
-                    })
-                    .on('error', function(err) {
-                        console.log('an error happened: ' + err.message);
-                    })
-                    command.run()
-
-
-           
-            var proc = ffmpeg(imgPath)
-            // loop for 5 seconds
-            .loop(5)
-            // using 25 fps
-            .fps(25)
-            // setup event handlers
-            .on('codecData', function(data) {
-                console.log('codecData=',data);
-            })
-            .on('progress', function({ percent }) {
-                console.log('progress percent: ' + percent);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully');
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-            })
-            // save to file
-            .save(videoPath);
-            */
-            
-            //single vid
-            /*
-            let proc = await ffmpeg()
-            .input(audioPath)
-            .input(imgPath)
-            // using 25 fps
-            .fps(25)
-            //audio bitrate
-            .audioBitrate('320k')
-            //video bitrate
-            .videoBitrate('8000k', true) //1080p
-            //resolution
-            .size('1920x1080')
-            // setup event handlers
-            .on('codecData', function(data) {
-                console.log('codecData=',data);
-            })
-            .on('progress', function({ percent }) {
-                console.log('progress percent: ' + percent);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully');
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-            })
-            // save to file
-            .save(videoPath).run();
-            */
-            
+            console.log('vidStatus = ', vidStatus)
         })
+        /*
 
+            //let concatAudioFfmpegCommand = await generateConcatAudioCommand(ffmpeg, selectedRows, outputFile)
+            //console.log('concatAudioFfmpegCommand = ', concatAudioFfmpegCommand)
+            
+
+            */
+            
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
             let checkedStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
@@ -718,7 +539,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             
         });
         
-
         //video output format selection changed
         $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
             console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
@@ -741,10 +561,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             setAllVidFormats(uploadNumber, rowNum, indexValueImgChoice)
         });
 
-        
-
-        //video output location button clicked
-        
         $(`#upload_${uploadNumber}_table-vidLocationButton`).on('click',function(event) {
             $(`#upload_${uploadNumber}_table-vidLocation`).click()
         })
@@ -761,10 +577,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             document.getElementById(`upload_${uploadNumber}_table-vidLocationButton`).innerText = path
 
         })
-
-        
-
-        
 
         table.on('order.dt', function (e, diff, edit) {
             console.log('order', reorder, searched);
@@ -846,7 +658,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //don't adjust the "#" column in the search and order events
             reorder = true;
         });
-
         
         //row-reorder
         table.on('row-reorder', function (e, diff, edit) {
@@ -862,9 +673,225 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             console.log(result);
         });
 
-
         resolve()
     })
+}
+
+
+async function generateVid(audioPath, imgPath, vidOutput){
+    return new Promise(async function (resolve, reject) {
+        console.log('generateVid audioPath = ', audioPath, ', imgPath = ', imgPath, ', vidOutput = ', vidOutput)
+
+    
+        //begin get ffmpeg info
+        const ffmpeg = require('fluent-ffmpeg');
+        //Get the paths to the packaged versions of the binaries we want to use
+        const ffmpegPath = require('ffmpeg-static').replace(
+            'app.asar',
+            'app.asar.unpacked'
+        );
+        const ffprobePath = require('ffprobe-static').path.replace(
+            'app.asar',
+            'app.asar.unpacked'
+        );
+        //tell the ffmpeg package where it can find the needed binaries.
+        ffmpeg.setFfmpegPath(ffmpegPath);
+        ffmpeg.setFfprobePath(ffprobePath);
+        //end get ffmpeg info
+        
+        let proc = await ffmpeg()
+        .input(audioPath)
+        .input(imgPath)
+        // using 25 fps
+        .fps(25)
+        //audio bitrate
+        .audioBitrate('320k')
+        //video bitrate
+        .videoBitrate('8000k', true) //1080p
+        //resolution
+        .size('1920x1080')
+        // setup event handlers
+        .on('codecData', function(data) {
+            console.log('codecData=',data);
+        })
+        .on('progress', function({ percent }) {
+            console.log('progress percent: ' + percent);
+        })
+        .on('end', function() {
+            console.log('file has been converted succesfully');
+            resolve('vid rendered')
+        })
+        .on('error', function(err) {
+            console.log('an error happened: ' + err.message);
+        })
+        // save to file
+        .save(vidOutput).run();
+
+    
+    })
+}
+
+let isConcatAudioRunning = false
+
+async function generateConcatAudio(selectedRows){
+    return new Promise(async function (resolve, reject) {
+            //use path to get dir of where an audioFile is located, and use that to create the outputFilepath
+            var path = require('path');
+            var outputDir = path.dirname(selectedRows[0].audioFilepath)
+            //create outputfile
+            let outputFile = `${outputDir}/concatAudio.mp3`
+
+             //begin get ffmpeg info
+            const ffmpeg = require('fluent-ffmpeg');
+            //Get the paths to the packaged versions of the binaries we want to use
+            const ffmpegPath = require('ffmpeg-static').replace(
+                'app.asar',
+                'app.asar.unpacked'
+            );
+            const ffprobePath = require('ffprobe-static').path.replace(
+                'app.asar',
+                'app.asar.unpacked'
+            );
+            //tell the ffmpeg package where it can find the needed binaries.
+            ffmpeg.setFfmpegPath(ffmpegPath);
+            ffmpeg.setFfprobePath(ffprobePath);
+            //end get ffmpeg info
+            
+            
+            //create ffmpeg command
+            const command = ffmpeg();
+            //add inputs
+            var count = selectedRows.length;
+            for(var i = 0; i < count; i++){
+                command.input(selectedRows[i].audioFilepath)
+            }   
+            console.log('runConcatAudioCommand() adding more to command')
+            //status updates
+            command.on('progress', function(progress) {
+                console.info(`Processing : ${progress.percent} % done`);
+            })
+            .on('start', function(data) {
+                isConcatAudioRunning = true;
+                console.log('start ');
+            })
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully, resolving');
+                
+                resolve(outputFile)
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+                //resolve('err')
+            })
+            .audioBitrate('320k')
+            .mergeToFile(outputFile)
+            //var outputFile = `${outputDir}/MERGEDAUDIO.mp3`
+            //var outputFileVid = `${outputDir}vvvvv.mp4`
+            //console.log('outputFile = ', outputFile)
+            
+            //trigger once
+            //let commandRspInit = runConcatAudioCommand(selectedRows, outputDir)
+            
+            //console.log('commandRspInit = ', commandRspInit)
+            //let resp = await exec()
+            //console.log('after wait')
+            //console.log('isConcatAudioRunning == ', isConcatAudioRunning)
+            /*
+            while(isConcatAudioRunning == false){
+                console.log('isConcatAudioRunning == false')
+                await wait(6)
+                //wait till done
+                let commandRsp = runConcatAudioCommand(selectedRows, outputDir)
+                console.log('commandRsp = ', commandRsp)
+            }
+            console.log('isConcatAudioRunning != false')
+            //should be saved at outputDir
+            
+
+            resposne('done ge)
+*/
+           
+
+    })
+}
+//the code will execute in 1 3 5 7 9 seconds later
+function exec() {
+    return new Promise(async function (resolve, reject) {
+    for(var i=0;i<1;i++) {
+        setTimeout(function() {
+            console.log(new Date());   //It's you code
+        },(i+i+1)*1000);
+    }
+    resolve('done')
+})
+}
+
+async function runConcatAudioCommand(selectedRows, outputDir){
+    return new Promise(async function (resolve, reject) {
+        //begin get ffmpeg info
+        const ffmpeg = require('fluent-ffmpeg');
+        //Get the paths to the packaged versions of the binaries we want to use
+        const ffmpegPath = require('ffmpeg-static').replace(
+            'app.asar',
+            'app.asar.unpacked'
+        );
+        const ffprobePath = require('ffprobe-static').path.replace(
+            'app.asar',
+            'app.asar.unpacked'
+        );
+        //tell the ffmpeg package where it can find the needed binaries.
+        ffmpeg.setFfmpegPath(ffmpegPath);
+        ffmpeg.setFfprobePath(ffprobePath);
+        //end get ffmpeg info
+
+        console.log('runConcatAudioCommand()')
+        //create ffmpeg command
+        const command = ffmpeg();
+        //add inputs
+        var count = selectedRows.length;
+        for(var i = 0; i < count; i++){
+            command.input(selectedRows[i].audioFilepath)
+        }   
+        console.log('runConcatAudioCommand() adding more to command')
+        //status updates
+        command.on('progress', function(progress) {
+            console.info(`Processing : ${progress.percent} % done`);
+        })
+        .on('start', function(data) {
+            isConcatAudioRunning = true;
+            console.log('start ');
+        })
+        .on('codecData', function(data) {
+            console.log('codecData=',data);
+        })
+        .on('end', function() {
+            console.log('file has been converted succesfully, resolving');
+            
+            resolve('DONE')//outputFile)
+        })
+        .on('error', function(err) {
+            console.log('an error happened: ' + err.message);
+            //resolve('err')
+        })
+        .audioBitrate('320k')
+        .mergeToFile(`${outputDir}/concatAudio.mp3`)
+        //resolve('done')
+    });
+
+        //command.run()
+}
+
+function waitSeconds(iMilliSeconds) {
+    var counter= 0
+        , start = new Date().getTime()
+        , end = 0;
+    while (counter < iMilliSeconds) {
+        end = new Date().getTime();
+        counter = end - start;
+    }
 }
 
 async function updateFullAlbumDisplayInfo(table, uploadNumber){
