@@ -717,7 +717,10 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     //const ffmpegPath = require('ffmpeg-static').replace('app.asar','app.asar.unpacked');
     //const ffprobePath = require('ffprobe-static').path.replace('app.asar','app.asar.unpacked');
     var ffmpegPath = require('ffmpeg-static-electron').path;
+    ffmpegPath = ffmpegPath.replace('app.asar', 'app.asar.unpacked')
+    
     var ffprobePath = require('ffprobe-static-electron').path;
+    ffprobePath = ffprobePath.replace('app.asar', 'app.asar.unpacked')
 
     //tell the ffmpeg package where it can find the needed binaries.
     ffmpeg.setFfmpegPath(ffmpegPath);
