@@ -293,6 +293,8 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                 </tr>
                             </thead>
                         </table>
+                        <!-- full album hard-coded -->
+                        <button onClick='fullAlbum("upload-${uploadNumber}")'>FULLALBUM</button>
 
                         <!-- Render Individual Button -->
                         <div class="card ml-5 mr-5 mt-5 renderOption" type='button' onclick="renderIndividual('test')">
@@ -464,7 +466,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             e.stopPropagation();
           } );
           */
-        
+     /*   
         $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e){
             console.log('Begin Concat Audio Command')
             
@@ -493,7 +495,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             let vidStatus = await generateVid(realConcatAudioFilepath, imgInput, vidOutput)
 
             console.log('vidStatus = ', vidStatus)
+       
         })
+         */
+
         /*
 
             //let concatAudioFfmpegCommand = await generateConcatAudioCommand(ffmpeg, selectedRows, outputFile)
@@ -677,6 +682,77 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     })
 }
 
+
+
+async function fullAlbum(uploadName) {
+    //document.getElementById("buttonId").disabled = true;
+
+    //get table
+    var table = $(`#upload_${uploadNumber}_table`).DataTable()
+    //get all selected rows
+    var selectedRows = table.rows( '.selected' ).data()
+    //get outputFile location
+    var path = require('path');
+    var outputDir = path.dirname(selectedRows[0].audioFilepath)
+    //create outputfile
+    var timestamp = new Date().getUTCMilliseconds();
+    let outputFilepath = `${outputDir}/output-${timestamp}.mp3` 
+
+    
+    console.log('fullAlbum() button pressed: ', timestamp)
+
+    await combineMp3FilesOrig(selectedRows, outputFilepath, '320k', timestamp);
+    //document.getElementById("buttonId").disabled = false;
+
+    console.log(`fullAlbum() /output-${timestamp}.mp3 should be created now`)
+}
+
+async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp) {
+    console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
+    
+    //begin get ffmpeg info
+    const ffmpeg = require('fluent-ffmpeg');
+    //Get the paths to the packaged versions of the binaries we want to use
+    const ffmpegPath = require('ffmpeg-static').replace('app.asar','app.asar.unpacked');
+    const ffprobePath = require('ffprobe-static').path.replace('app.asar','app.asar.unpacked');
+    //tell the ffmpeg package where it can find the needed binaries.
+    ffmpeg.setFfmpegPath(ffmpegPath);
+    ffmpeg.setFfprobePath(ffprobePath);
+    //end set ffmpeg info
+
+    //create ffmpeg command
+    console.log(`combineMp3FilesOrig(): create command`)
+    const command = ffmpeg();
+    //set command inputs
+    command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\5. Akula (Club Mix).flac') //06:16
+    command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\4. Civilian Barracks.flac') //05:52
+
+    return new Promise((resolve, reject) => {
+        console.log(`combineMp3FilesOrig(): command status logging`)
+        command.on('progress', function(progress) {
+            console.info(`Processing : ${progress.percent} % done`);
+        })
+        .on('codecData', function(data) {
+            console.log('codecData=',data);
+        })
+        .on('end', function() {
+            console.log('file has been converted succesfully; resolve() promise');
+            resolve();
+        })
+        .on('error', function(err) {
+            console.log('an error happened: ' + err.message, ', reject()');
+            reject(err);
+        })
+        console.log(`combineMp3FilesOrig(): add audio bitrate to command`)
+   
+        console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
+        command.mergeToFile(outputFilepath);
+        command.audioBitrate(bitrate).save(outputFilepath).audioBitrate(bitrate).run()
+        console.log(`combineMp3FilesOrig(): end of promise`)
+
+    });
+    console.log(`combineMp3FilesOrig(): end of function`)
+}
 
 async function generateVid(audioPath, imgPath, vidOutput){
     return new Promise(async function (resolve, reject) {
