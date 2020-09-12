@@ -712,9 +712,13 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     
     //begin get ffmpeg info
     const ffmpeg = require('fluent-ffmpeg');
+    
     //Get the paths to the packaged versions of the binaries we want to use
-    const ffmpegPath = require('ffmpeg-static').replace('app.asar','app.asar.unpacked');
-    const ffprobePath = require('ffprobe-static').path.replace('app.asar','app.asar.unpacked');
+    //const ffmpegPath = require('ffmpeg-static').replace('app.asar','app.asar.unpacked');
+    //const ffprobePath = require('ffprobe-static').path.replace('app.asar','app.asar.unpacked');
+    var ffmpegPath = require('ffmpeg-static-electron').path;
+    var ffprobePath = require('ffprobe-static-electron').path;
+
     //tell the ffmpeg package where it can find the needed binaries.
     ffmpeg.setFfmpegPath(ffmpegPath);
     ffmpeg.setFfprobePath(ffprobePath);
@@ -724,8 +728,13 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     console.log(`combineMp3FilesOrig(): create command`)
     const command = ffmpeg();
     //set command inputs
-    command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\5. Akula (Club Mix).flac') //06:16
-    command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\4. Civilian Barracks.flac') //05:52
+    //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\5. Akula (Club Mix).flac') //06:16
+    //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\4. Civilian Barracks.flac') //05:52
+    //add inputs
+    var count = selectedRows.length;
+    for(var i = 0; i < count; i++){
+        command.input(selectedRows[i].audioFilepath)
+    } 
 
     return new Promise((resolve, reject) => {
         console.log(`combineMp3FilesOrig(): command status logging`)
@@ -747,7 +756,7 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
    
         console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
         command.mergeToFile(outputFilepath);
-        command.audioBitrate(bitrate).save(outputFilepath).audioBitrate(bitrate).run()
+        command.audioBitrate(bitrate)
         console.log(`combineMp3FilesOrig(): end of promise`)
 
     });
