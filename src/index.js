@@ -13,9 +13,21 @@ require('datatables.net-rowreorder-dt')();
 Event Listeners
 */
 
+//new upload file selection button 
+
+
+     $("#newUploadFileSelection").change(async function (e) {
+        var files = e.currentTarget.files;
+        console.log('newUploadFileSelection: ', files);
+
+        let event = {"dataTransfer":{"files":files}}
+        newUploadFileDropEvent(event, false)
+
+    });
+
 //newUpload modal file drag & drop event listener
 var newUploadBox = document.getElementById('newUploadFilesInput')
-newUploadBox.addEventListener('drop', () => newUploadFileDropEvent(event))
+newUploadBox.addEventListener('drop', () => newUploadFileDropEvent(event, true))
 
 newUploadBox.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -1151,10 +1163,11 @@ async function addToUploadList(uploadKey, uploadValue) {
 
 
 
-async function newUploadFileDropEvent(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
+async function newUploadFileDropEvent(event, preventDefault) {
+    if(preventDefault){
+        event.preventDefault();
+        event.stopPropagation();
+    }
     //sort all files into audio / images 
     var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
