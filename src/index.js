@@ -712,7 +712,7 @@ function deleteFile(path){
 
 async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
     return new Promise(async function (resolve, reject) {
-        console.log('generateVid audioPath = ', audioPath, ', imgPath = ', imgPath, ', vidOutput = ', vidOutput)
+        console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
         document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Video: 0%`
 
         //begin get ffmpeg info
@@ -726,8 +726,9 @@ async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
         ffmpeg.setFfmpegPath(ffmpegPath);
         ffmpeg.setFfprobePath(ffprobePath);
         //end set ffmpeg info
-  /*
+ /*
         let audioFilePath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\01.i like to get near you.mp3'
+  
         let imgFilePath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\front.jpg'
         let videoPath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\YOUTUBE.mp4'
 
@@ -749,23 +750,26 @@ async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
            .output(orderFolder + '/output.mp4')
         */
 
+        //audioPath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\01.i like to get near you.mp3'
+            
+        //ffmpeg -loop 1 -framerate 2 -i "'+ imageFilepath +'" -i "'+ sourceAudioFilepath +'" -vf "scale=2*trunc(iw/2):2*trunc(ih/2),setsar=1" -c:v libx264 -preset medium -tune stillimage -crf 18 -c:a copy -b:a 320k -shortest -vf scale=' + resolution + ' -pix_fmt yuv420p "'+ outputFilename  +'.mp4"'
+        
         ffmpeg()
         .input(imgPath)
         .loop()
-        .addInputOption('-framerate 3')
+        .addInputOption('-framerate 2')
         .input(audioPath)
         .videoCodec('libx264')
-        //.audioCodec('copy')
-
+        .audioCodec('copy')
         .audioBitrate('320k')
         .videoBitrate('8000k', true) 
         .size('1920x1080')
-
         .outputOptions([
-          '-tune stillimage',
-          '-crf 18',
-          '-pix_fmt yuv420p',
-          '-shortest'
+            '-preset medium',
+            '-tune stillimage',
+            '-crf 18',
+            '-pix_fmt yuv420p',
+            '-shortest'
         ])
         
         .on('progress', function(progress) {
@@ -785,7 +789,6 @@ async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
             console.log('vid() an error happened: ' + err.message, ', reject()');
             reject(err);
         })
-        //output
         .output(vidOutput).run()
   
         /*
