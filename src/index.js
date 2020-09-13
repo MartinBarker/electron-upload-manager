@@ -1,4 +1,5 @@
 var newUploadFiles = {}
+
 /* 
 run this code when the page first loads 
 */
@@ -206,7 +207,8 @@ async function createDataset(uploadFiles, uploadNumber) {
                     format: audioObj.type,
                     length: audioObj.length,
                     imgSelection: imgSelectionSelect,
-                    vidFormatSelection: videoOutputSelection
+                    vidFormatSelection: videoOutputSelection,
+                    audioFilepath: audioObj.path,
                     //video output(leave empty)
                 }
                 fileCount++
@@ -279,6 +281,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                             </select> 
                                         </div>
                                     </th>
+                                    <th>audioFilepath</th>
                                     <!--
                                     <th>Video Output Folder: 
                                         <div >
@@ -292,16 +295,19 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                         </table>
 
                         <!-- Render Individual Button -->
-                        <div class="card ml-5 mr-5 mt-5 renderOption" type='button' onclick="renderIndividual('test')">
+                        <div class="card ml-5 mr-5 mt-1 renderOption" type='button' onclick="renderIndividual('test')">
                             <div class='card-body'>
                                 <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render <a id='upload_${uploadNumber}_numChecked'>0</a> individual files
                             </div>
                         </div>
 
                         <!-- Render Full Album Button -->
-                        <div class="card ml-5 mr-5 mt-5 renderOption">
+                        <div class="card ml-5 mr-5 mt-1 renderOption">
                             <div class='card-body' id='upload_${uploadNumber}_fullAlbumButton'>
-                                <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render a Full Album video
+                                <div>
+                                    <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>
+                                    Render a Full Album video <strong><a style='float:right' id='upload_${uploadNumber}_fullAlbumStatus'></a></strong>
+                                </div>
                                     <br>
                                     Num Tracks: <a id='upload_${uploadNumber}_numCheckedFullAlbum'>0</a>
                                     </br>
@@ -350,6 +356,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         var origNim = [];
 
         var table = $(`#upload_${uploadNumber}_table`).DataTable({
+            "pageLength": 5000,
             select: {
                 style: 'multi',
                 selector: 'td:nth-child(2)'
@@ -363,7 +370,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 { "data": "length" },
                 { "data": "imgSelection" },
                 { "data": "outputFormat" },
-                //{ "data": "outputLocation" },
+                { "data": "audioFilepath" },
             ],
             columnDefs: [
                 { //invisible sequence num
@@ -409,6 +416,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     targets: 6,
                     type: "string",
                     orderable: false
+                },
+                {//audioFilepath
+                    targets:7,
+                    visible:false,
                 }
             ],
             "language": {
@@ -433,6 +444,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "imgSelection": i.imgSelection,
                 "outputFormat": i.vidFormatSelection,
                 //"outputLocation": "temp output location",
+                "audioFilepath":i.audioFilepath,
             }).node().id = 'rowBrowseId' + i.sampleItemId;
             count++;
         });
@@ -455,7 +467,23 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             e.stopPropagation();
           } );
           */
+    
+        $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e){
+            console.log('Begin Concat Audio Command')
+        
+            fullAlbum(`upload-${uploadNumber}`, uploadNumber)
+       
+        })
+      
 
+        /*
+
+            //let concatAudioFfmpegCommand = await generateConcatAudioCommand(ffmpeg, selectedRows, outputFile)
+            //console.log('concatAudioFfmpegCommand = ', concatAudioFfmpegCommand)
+            
+
+            */
+            
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
             let checkedStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
@@ -493,7 +521,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             
         });
         
-
         //video output format selection changed
         $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
             console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
@@ -516,10 +543,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             setAllVidFormats(uploadNumber, rowNum, indexValueImgChoice)
         });
 
-        
-
-        //video output location button clicked
-        
         $(`#upload_${uploadNumber}_table-vidLocationButton`).on('click',function(event) {
             $(`#upload_${uploadNumber}_table-vidLocation`).click()
         })
@@ -536,10 +559,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             document.getElementById(`upload_${uploadNumber}_table-vidLocationButton`).innerText = path
 
         })
-
-        
-
-        
 
         table.on('order.dt', function (e, diff, edit) {
             console.log('order', reorder, searched);
@@ -621,7 +640,6 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //don't adjust the "#" column in the search and order events
             reorder = true;
         });
-
         
         //row-reorder
         table.on('row-reorder', function (e, diff, edit) {
@@ -637,9 +655,333 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             console.log(result);
         });
 
-
         resolve()
     })
+}
+
+
+
+async function fullAlbum(uploadName, uploadNumber) {
+    document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = 'Generating Audio: 0%'
+
+    //get table
+    var table = $(`#upload_${uploadNumber}_table`).DataTable()
+    //get all selected rows
+    var selectedRows = table.rows( '.selected' ).data()
+    //get outputFile location
+    var path = require('path');
+    var outputDir = path.dirname(selectedRows[0].audioFilepath)
+    //create outputfile
+    var timestamp = new Date().getUTCMilliseconds();
+    let outputFilepath = `${outputDir}\\output-${timestamp}.mp3` 
+
+    //create concat audio file
+    await combineMp3FilesOrig(selectedRows, outputFilepath, '320k', timestamp, uploadNumber);
+
+    //get img input
+    var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
+    var upload = uploadList[`upload-${uploadNumber}`]
+    let imgInput = upload.files.images[0].path
+    
+    let vidOutput = `${outputDir}\\fullAlbum-${timestamp}.mp4` 
+    await generateVid(outputFilepath, imgInput, vidOutput, uploadNumber)
+
+    console.log('deleting file')
+    //delete audio file
+    deleteFile(outputFilepath)
+
+    console.log('after caclling deleting file')
+}
+
+function deleteFile(path){
+    console.log('deleteFile()')
+    const fs = require('fs')
+    fs.unlink(path, (err) => {
+    if (err) {
+        console.error("err deleting file = ", err)
+        return
+    }
+
+    
+    console.log('file removed')
+
+    //file removed
+    })
+}
+
+async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
+    return new Promise(async function (resolve, reject) {
+        console.log('generateVid audioPath = ', audioPath, ', imgPath = ', imgPath, ', vidOutput = ', vidOutput)
+        document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Video: 0%`
+
+        //begin get ffmpeg info
+        const ffmpeg = require('fluent-ffmpeg');
+        //Get the paths to the packaged versions of the binaries we want to use
+        var ffmpegPath = require('ffmpeg-static-electron').path;
+        ffmpegPath = ffmpegPath.replace('app.asar', 'app.asar.unpacked')
+        var ffprobePath = require('ffprobe-static-electron').path;
+        ffprobePath = ffprobePath.replace('app.asar', 'app.asar.unpacked')
+        //tell the ffmpeg package where it can find the needed binaries.
+        ffmpeg.setFfmpegPath(ffmpegPath);
+        ffmpeg.setFfprobePath(ffprobePath);
+        //end set ffmpeg info
+            
+        ffmpeg()
+        .input(audioPath)
+        .input(imgPath)
+        //audio bitrate
+        .audioBitrate('320k')
+        //video bitrate
+        .videoBitrate('8000k', true) //1080p
+        //resolution
+        .size('1920x1080')
+        .outputOptions('-c:v libx264')
+        .outputOptions('-pix_fmt yuv420p')
+        .outputOptions('-f mp4')
+
+        .on('progress', function(progress) {
+            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+            console.info(`vid() Processing : ${progress.percent} % done`);
+        })
+        .on('codecData', function(data) {
+            console.log('vid() codecData=',data);
+        })
+        .on('end', function() {
+            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Video generated.`
+            console.log('vid()  file has been converted succesfully; resolve() promise');
+            resolve();
+        })
+        .on('error', function(err) {
+            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating video.`
+            console.log('vid() an error happened: ' + err.message, ', reject()');
+            reject(err);
+        })
+
+        .output(vidOutput).run()
+
+
+    })
+}
+
+
+async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber) {
+    console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
+    
+    //begin get ffmpeg info
+    const ffmpeg = require('fluent-ffmpeg');
+    //Get the paths to the packaged versions of the binaries we want to use
+    var ffmpegPath = require('ffmpeg-static-electron').path;
+    ffmpegPath = ffmpegPath.replace('app.asar', 'app.asar.unpacked')
+    var ffprobePath = require('ffprobe-static-electron').path;
+    ffprobePath = ffprobePath.replace('app.asar', 'app.asar.unpacked')
+    //tell the ffmpeg package where it can find the needed binaries.
+    ffmpeg.setFfmpegPath(ffmpegPath);
+    ffmpeg.setFfprobePath(ffprobePath);
+    //end set ffmpeg info
+
+    //create ffmpeg command
+    console.log(`combineMp3FilesOrig(): create command`)
+    const command = ffmpeg();
+    //set command inputs
+    //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\5. Akula (Club Mix).flac') //06:16
+    //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\4. Civilian Barracks.flac') //05:52
+    //add inputs
+    var count = selectedRows.length;
+    for(var i = 0; i < count; i++){
+        command.input(selectedRows[i].audioFilepath)
+    } 
+
+    return new Promise((resolve, reject) => {
+        console.log(`combineMp3FilesOrig(): command status logging`)
+        command.on('progress', function(progress) {
+            console.info(`Processing : ${progress.percent} % done`);
+            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
+        })
+        .on('codecData', function(data) {
+            console.log('codecData=',data);
+        })
+        .on('end', function() {
+            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
+            console.log('file has been converted succesfully; resolve() promise');
+            resolve();
+        })
+        .on('error', function(err) {
+            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
+            console.log('an error happened: ' + err.message, ', reject()');
+            reject(err);
+        })
+        console.log(`combineMp3FilesOrig(): add audio bitrate to command`)
+   
+        console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
+        command.mergeToFile(outputFilepath);
+        command.audioBitrate(bitrate)
+        console.log(`combineMp3FilesOrig(): end of promise`)
+
+    });
+    console.log(`combineMp3FilesOrig(): end of function`)
+}
+
+let isConcatAudioRunning = false
+
+async function generateConcatAudio(selectedRows){
+    return new Promise(async function (resolve, reject) {
+            //use path to get dir of where an audioFile is located, and use that to create the outputFilepath
+            var path = require('path');
+            var outputDir = path.dirname(selectedRows[0].audioFilepath)
+            //create outputfile
+            let outputFile = `${outputDir}/concatAudio.mp3`
+
+             //begin get ffmpeg info
+            const ffmpeg = require('fluent-ffmpeg');
+            //Get the paths to the packaged versions of the binaries we want to use
+            const ffmpegPath = require('ffmpeg-static').replace(
+                'app.asar',
+                'app.asar.unpacked'
+            );
+            const ffprobePath = require('ffprobe-static').path.replace(
+                'app.asar',
+                'app.asar.unpacked'
+            );
+            //tell the ffmpeg package where it can find the needed binaries.
+            ffmpeg.setFfmpegPath(ffmpegPath);
+            ffmpeg.setFfprobePath(ffprobePath);
+            //end get ffmpeg info
+            
+            
+            //create ffmpeg command
+            const command = ffmpeg();
+            //add inputs
+            var count = selectedRows.length;
+            for(var i = 0; i < count; i++){
+                command.input(selectedRows[i].audioFilepath)
+            }   
+            console.log('runConcatAudioCommand() adding more to command')
+            //status updates
+            command.on('progress', function(progress) {
+                console.info(`Processing : ${progress.percent} % done`);
+            })
+            .on('start', function(data) {
+                isConcatAudioRunning = true;
+                console.log('start ');
+            })
+            .on('codecData', function(data) {
+                console.log('codecData=',data);
+            })
+            .on('end', function() {
+                console.log('file has been converted succesfully, resolving');
+                
+                resolve(outputFile)
+            })
+            .on('error', function(err) {
+                console.log('an error happened: ' + err.message);
+                //resolve('err')
+            })
+            .audioBitrate('320k')
+            .mergeToFile(outputFile)
+            //var outputFile = `${outputDir}/MERGEDAUDIO.mp3`
+            //var outputFileVid = `${outputDir}vvvvv.mp4`
+            //console.log('outputFile = ', outputFile)
+            
+            //trigger once
+            //let commandRspInit = runConcatAudioCommand(selectedRows, outputDir)
+            
+            //console.log('commandRspInit = ', commandRspInit)
+            //let resp = await exec()
+            //console.log('after wait')
+            //console.log('isConcatAudioRunning == ', isConcatAudioRunning)
+            /*
+            while(isConcatAudioRunning == false){
+                console.log('isConcatAudioRunning == false')
+                await wait(6)
+                //wait till done
+                let commandRsp = runConcatAudioCommand(selectedRows, outputDir)
+                console.log('commandRsp = ', commandRsp)
+            }
+            console.log('isConcatAudioRunning != false')
+            //should be saved at outputDir
+            
+
+            resposne('done ge)
+*/
+           
+
+    })
+}
+//the code will execute in 1 3 5 7 9 seconds later
+function exec() {
+    return new Promise(async function (resolve, reject) {
+    for(var i=0;i<1;i++) {
+        setTimeout(function() {
+            console.log(new Date());   //It's you code
+        },(i+i+1)*1000);
+    }
+    resolve('done')
+})
+}
+
+async function runConcatAudioCommand(selectedRows, outputDir){
+    return new Promise(async function (resolve, reject) {
+        //begin get ffmpeg info
+        const ffmpeg = require('fluent-ffmpeg');
+        //Get the paths to the packaged versions of the binaries we want to use
+        const ffmpegPath = require('ffmpeg-static').replace(
+            'app.asar',
+            'app.asar.unpacked'
+        );
+        const ffprobePath = require('ffprobe-static').path.replace(
+            'app.asar',
+            'app.asar.unpacked'
+        );
+        //tell the ffmpeg package where it can find the needed binaries.
+        ffmpeg.setFfmpegPath(ffmpegPath);
+        ffmpeg.setFfprobePath(ffprobePath);
+        //end get ffmpeg info
+
+        console.log('runConcatAudioCommand()')
+        //create ffmpeg command
+        const command = ffmpeg();
+        //add inputs
+        var count = selectedRows.length;
+        for(var i = 0; i < count; i++){
+            command.input(selectedRows[i].audioFilepath)
+        }   
+        console.log('runConcatAudioCommand() adding more to command')
+        //status updates
+        command.on('progress', function(progress) {
+            console.info(`Processing : ${progress.percent} % done`);
+        })
+        .on('start', function(data) {
+            isConcatAudioRunning = true;
+            console.log('start ');
+        })
+        .on('codecData', function(data) {
+            console.log('codecData=',data);
+        })
+        .on('end', function() {
+            console.log('file has been converted succesfully, resolving');
+            
+            resolve('DONE')//outputFile)
+        })
+        .on('error', function(err) {
+            console.log('an error happened: ' + err.message);
+            //resolve('err')
+        })
+        .audioBitrate('320k')
+        .mergeToFile(`${outputDir}/concatAudio.mp3`)
+        //resolve('done')
+    });
+
+        //command.run()
+}
+
+function waitSeconds(iMilliSeconds) {
+    var counter= 0
+        , start = new Date().getTime()
+        , end = 0;
+    while (counter < iMilliSeconds) {
+        end = new Date().getTime();
+        counter = end - start;
+    }
 }
 
 async function updateFullAlbumDisplayInfo(table, uploadNumber){
@@ -840,7 +1182,7 @@ function getDuration(src) {
 async function ffmpegSingleRender(audioPath, imgPath, videoPath){
     console.log('ffmpeg-test')
     //require the ffmpeg package so we can use ffmpeg using JS
-    const ffmpeg = require('fluent-ffmpeg');
+    //const ffmpeg = require('fluent-ffmpeg');
     //Get the paths to the packaged versions of the binaries we want to use
     const ffmpegPath = require('ffmpeg-static').replace(
         'app.asar',

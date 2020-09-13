@@ -1,31 +1,71 @@
 {
-  "name": "drag-and-drop",
-  "version": "1.0.0",
-  "description": "",
+  "name": "musicvideomanager",
+  "version": "0.0.1",
+  "description": "program to run ffmpeg commands to render music videos",
+  "author": "xyz <xyz@gmail.com>",
+  "license": "ISC",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bootstrap": "^4.5.0",
-    "datatables.net-dt": "^1.10.21",
-    "datatables.net-rowreorder-dt": "^1.2.7",
-    "electron": "^9.1.1",
-    "ffmpeg-static": "^4.2.6",
-    "ffprobe-static": "^3.0.0",
-    "fluent-ffmpeg": "^2.1.2",
-    "get-audio-duration": "^2.0.3",
-    "jquery": "^3.5.1",
-    "os": "^0.1.1",
-    "popper.js": "^1.16.1"
+    "s": "electron .",
+    "postinstall": "install-app-deps",
+    "start": "npm install && electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "build": {
     "asarUnpack": [
       "node_modules/ffmpeg-static/bin/${os}/${arch}/ffmpeg",
       "node_modules/ffmpeg-static/index.js",
       "node_modules/ffmpeg-static/package.json"
-    ]
+    ],
+    "appId": "yourappid",
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "category": "TODO: fill here the category of your app",
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.png"
+    }
+  },
+  "dependencies": {
+    "bootstrap": "^4.5.0",
+    "datatables.net-dt": "^1.10.21",
+    "datatables.net-rowreorder-dt": "^1.2.7",
+    "electron-builder-squirrel-windows": "^22.8.1",
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-winstaller": "^4.0.1",
+    "ffmpeg-static": "^4.2.7",
+    "ffmpeg-static-electron": "^2.0.1",
+    "ffprobe-static": "^3.0.0",
+    "ffprobe-static-electron": "^2.0.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "get-audio-duration": "^2.0.3",
+    "jquery": "^3.5.1",
+    "os": "^0.1.1",
+    "popper.js": "^1.16.1"
+  },
+  "devDependencies": {
+    "electron-builder": "^22.8.0",
+    "electron-packager": "^15.1.0",
+    "electron": "^9.1.1"
   }
 }
