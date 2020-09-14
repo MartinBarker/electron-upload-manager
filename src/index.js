@@ -313,12 +313,25 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                             </div>
                         </div>
 
-                        <!-- Render Full Album Button -->
+                        <div class="card ml-5 mr-5 mt-1 " >
+                           <button id='upload_${uploadNumber}_fullAlbumButton'>Render Full Album Video</button>
+                            Full Album Img:<div id='upload_${uploadNumber}_fullAlbumImgChoiceDiv'> <strong><a style='float:right' id='upload_${uploadNumber}_fullAlbumStatus'></a></strong>
+                           </div>
+                                <div>Num Tracks: <a id='upload_${uploadNumber}_numCheckedFullAlbum'>0</a></div>
+                                <div>Length: <a id='upload_${uploadNumber}_fullAlbumLength'>00:00</a></div>
+                                Tracklist:
+                                <div id='upload_${uploadNumber}_fullAlbumTracklist'>
+                            </div>
+                        </div>
+
+                        <!-- Render Full Album Button -
                         <div class="card ml-5 mr-5 mt-1 renderOption">
                             <div class='card-body' id='upload_${uploadNumber}_fullAlbumButton'>
                                 <div>
                                     <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>
                                     Render a Full Album video <strong><a style='float:right' id='upload_${uploadNumber}_fullAlbumStatus'></a></strong>
+                                </div>
+                                
                                 </div>
                                     <br>
                                     Num Tracks: <a id='upload_${uploadNumber}_numCheckedFullAlbum'>0</a>
@@ -327,10 +340,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                     </br>
                                     Tracklist:
                                     <div id='upload_${uploadNumber}_fullAlbumTracklist'>
-                                    </div>
+                                </div>
                                     
                             </div>
-                        </div>
+                        </div> -->
 
                     </div>
                 </div>
@@ -357,6 +370,30 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         }
         //add image dropdown selection to table html
        document.getElementById(`upload_${uploadNumber}_table-image-col`).appendChild(uploadImageSelectionColHeader)
+
+       //create full album button image selection
+       var fullAlbumImageSelectionColHeader = document.createElement('select')
+       fullAlbumImageSelectionColHeader.setAttribute('id', `upload_${uploadNumber}_fullAlbumImgChoice`)
+       fullAlbumImageSelectionColHeader.setAttribute('style', `max-width:150px; text-align: left;`)
+      
+       try {
+           for (var x = 0; x < uploadFiles.images.length; x++) {
+               var rowImg = document.createElement('option')
+               rowImg.setAttribute('value', x)
+               rowImg.setAttribute('style', `width:150px; text-align: left;`)
+               rowImg.innerHTML = `${uploadFiles.images[x].name}`
+               fullAlbumImageSelectionColHeader.appendChild(rowImg)
+           }
+       } catch (err) {
+
+       }
+       //add full album button img selection to upload_${uploadNumber}_fullAlbumImgChoiceDiv
+       document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoiceDiv`).appendChild(fullAlbumImageSelectionColHeader)
+       //prevent clicking full album img option from clicking full album button
+       document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoice`).addEventListener("click", function(event){
+        event.preventDefault()
+        });
+
 
         //create dataset
         let data = await createDataset(uploadFiles, uploadNumber)       
@@ -693,9 +730,11 @@ async function fullAlbum(uploadName, uploadNumber) {
     //get img input
     var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
     var upload = uploadList[`upload-${uploadNumber}`]
-    let imgInput = upload.files.images[0].path
+    let imgChoice = document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoice`).value
+    let imgInput = upload.files.images[imgChoice].path
     
     let vidOutput = `${outputDir}\\fullAlbum-${timestamp}.mp4` 
+    console.log('imgInput = ', imgInput)
     await generateVid(outputFilepath, imgInput, vidOutput, uploadNumber)
     //await generateVid(selectedRows[0].audioFilepath, imgInput, vidOutput, uploadNumber)
 
