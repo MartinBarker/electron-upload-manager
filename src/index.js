@@ -822,6 +822,7 @@ async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
             '-pix_fmt yuv420p',
             '-shortest'
         ])
+        .size('50%')
         
         .on('progress', function(progress) {
             document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Video: ${Math.round(progress.percent)}%`
