@@ -270,7 +270,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                             <thead> 
                                 <tr>
                                     <th>sequence</th>
-                                    <th style='max-width:3px'>#</th>
+                                    <th style='max-width:13px'>#</th>
                                     <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
                                     <th>Audio</th>
                                     <th style='max-width:58px'>Length</th>
@@ -481,7 +481,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         data.forEach(function (i) {
             table.row.add({
                 "sequence": i.itemId,
-                "#": count,
+                "#": `<div style='cursor: pointer;'><i class="fa fa-bars"></i> ${count}</div>`,
                 "selectAll": '<input type="checkbox">',
                 "audio": i.audio,
                 //"format": 'adasd',//i.format,
@@ -615,7 +615,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 //assign "#" values in row order
                 table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
                     var data = this.data();
-                    data['#'] = i;
+                    data['#'] = `<div style='cursor: pointer;'><i class="fa fa-bars"></i> ${i}</div>`//i;
                     i++;
                     this.data(data);
                 });
@@ -641,7 +641,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 //assign "#" values in row order
                 table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
                     var data = this.data();
-                    data['#'] = i;
+                    data['#'] = `<div style='cursor: pointer;'><i class="fa fa-bars"></i> ${i}</div>`//i;
                     i++;
                     this.data(data);
                 });
@@ -675,7 +675,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 //console.log('found new seq',newSeq);
 
                 //assign the new "#" to the current row
-                data['#'] = newSeq + 1;
+                data['#'] = `<div style='cursor: pointer;'><i class="fa fa-bars"></i> ${newSeq + 1}</div>`//newSeq + 1;
                 table.row(indexes[r]).data(data);
 
             }
