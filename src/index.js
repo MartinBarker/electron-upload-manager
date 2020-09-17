@@ -167,10 +167,6 @@ async function getLocalStorage(input) {
     console.log(item)
 }
 
-async function renderIndividual(tempVar){
-    console.log('renderIndividual() tempVar = ', tempVar)
-}
-
 async function deleteAllUploads(){
     await localStorage.setItem('uploadList', JSON.stringify({}))
     document.getElementById('uploadList').innerHTML = ''
@@ -184,7 +180,7 @@ async function createDataset(uploadFiles, uploadNumber) {
             //for each image
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var imagFilename = `${uploadFiles.images[x].name}`
-                imageSelectionOptions = imageSelectionOptions + `<option value="${imagFilename}">${imagFilename}</option>`
+                imageSelectionOptions = imageSelectionOptions + `<option value="${x}">${imagFilename}</option>`
             }
         } catch (err) {
 
@@ -199,7 +195,7 @@ async function createDataset(uploadFiles, uploadNumber) {
                 var audioObj = uploadFiles['audio'][x]
                 
                 //create img selection form
-                var imgSelectionSelect = `<select style='width:150px' id='upload_${uploadNumber}_table-image-row_${x}' >`
+                var imgSelectionSelect = `<select style='width:150px' id='upload_${uploadNumber}_table-audio-${x}-img_choice' >`
                 imgSelectionSelect = imgSelectionSelect + imageSelectionOptions + `</select>`
 
                 //creaet vid output selection
@@ -307,7 +303,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                         </table>
 
                         <!-- Render Individual Button -->
-                        <div class="card ml-5 mr-5 mt-1 renderOption" type='button' onclick="renderIndividual('test')">
+                        <div class="card ml-5 mr-5 mt-1 renderOption" type='button' onclick="renderIndividual(${uploadNumber})">
                             <div class='card-body'>
                                 <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render <a id='upload_${uploadNumber}_numChecked'>0</a> individual files
                             </div>
@@ -351,8 +347,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             
         ` );
 
-        /* TABLE ATTEMPT 1 */
-        //create image dropdown selection
+        //create image dropdown selection column header
         var uploadImageSelectionColHeader = document.createElement('select')
         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
         uploadImageSelectionColHeader.setAttribute('style', `max-width:150px; text-align: left;`)
@@ -708,7 +703,42 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     })
 }
 
+async function renderIndividual(uploadNumber){
+    console.log('renderIndividual() uploadNumber = ', uploadNumber)
+    //get table
+    var table = $(`#upload_${uploadNumber}_table`).DataTable()
+    //get upload from uploadList
+    var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
+    var upload = uploadList[`upload-${uploadNumber}`]
+    //get all selected rows
+    var selectedRows = table.rows( '.selected' ).data()
+    //get dir
+    var path = require('path');
+    var outputDir = path.dirname(selectedRows[0].audioFilepath)
+    console.log('path.sep = ', path.sep)
+    for(var i = 0; i < selectedRows.length; i++){
+        console.log(i, ': ', selectedRows[i])
+        //get song number:
+        let songNum = (selectedRows[i].sequence)-1
+        //get img selection
+        let imgChoice = document.getElementById(`upload_${uploadNumber}_table-audio-${songNum}-img_choice`).value
+        let imgInput = upload.files.images[imgChoice].path
+        //get filetype selection
+        //get audio filename without file extension/type at end
+        let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
+        //get filepath for audio
+        let audioFilepath = selectedRows[i].audioFilepath
+        //create output file
+        let vidOutput = `${outputDir}${path.sep}${songName}.mp4` 
+        console.log('vidOutput=', vidOutput)
+        //render vid
+        await generateVid(audioFilepath, imgInput, vidOutput, uploadNumber)
 
+    }
+    
+    //get upload from upload-list
+    //get all selected rows
+}
 
 async function fullAlbum(uploadName, uploadNumber) {
     document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = 'Generating Audio: 0%'
@@ -722,7 +752,7 @@ async function fullAlbum(uploadName, uploadNumber) {
     var outputDir = path.dirname(selectedRows[0].audioFilepath)
     //create outputfile
     var timestamp = new Date().getUTCMilliseconds();
-    let outputFilepath = `${outputDir}\\output-${timestamp}.mp3` 
+    let outputFilepath = `${outputDir}${path.sep}output-${timestamp}.mp3` 
 
     //create concat audio file
     await combineMp3FilesOrig(selectedRows, outputFilepath, '320k', timestamp, uploadNumber);
@@ -733,7 +763,7 @@ async function fullAlbum(uploadName, uploadNumber) {
     let imgChoice = document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoice`).value
     let imgInput = upload.files.images[imgChoice].path
     
-    let vidOutput = `${outputDir}\\fullAlbum-${timestamp}.mp4` 
+    let vidOutput = `${outputDir}${path.sep}fullAlbum-${timestamp}.mp4` 
     console.log('imgInput = ', imgInput)
     await generateVid(outputFilepath, imgInput, vidOutput, uploadNumber)
     //await generateVid(selectedRows[0].audioFilepath, imgInput, vidOutput, uploadNumber)
