@@ -1,49 +1,39 @@
 var newUploadFiles = {}
 
-/* 
-run this code when the page first loads 
-*/
+//display every upload in uploadList[]
 updateUploadListDisplay()
 
-//var $ = jQuery = require('jquery');
+//require datatables
 require('datatables.net-dt')();
 require('datatables.net-rowreorder-dt')();
 
-/*
-Event Listeners
-*/
+//if new upload navbar button is clicked
+$("#newUploadFileSelection").change(async function (e) {
+    var files = e.currentTarget.files;
+    console.log('newUploadFileSelection: ', files);
 
-//new upload file selection button 
+    let event = { "dataTransfer": { "files": files } }
+    newUploadFileDropEvent(event, false)
 
+});
 
-     $("#newUploadFileSelection").change(async function (e) {
-        var files = e.currentTarget.files;
-        console.log('newUploadFileSelection: ', files);
-
-        let event = {"dataTransfer":{"files":files}}
-        newUploadFileDropEvent(event, false)
-
-    });
-
-//newUpload modal file drag & drop event listener
+//get new upload drag&drop box
 var newUploadBox = document.getElementById('newUploadFilesInput')
+//add event listener when files get dropped into it
 newUploadBox.addEventListener('drop', () => newUploadFileDropEvent(event, true))
-
+//drag&drop events
 newUploadBox.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.stopPropagation();
 });
 newUploadBox.addEventListener('dragenter', (event) => {
     console.log('NEWUPLOAD File is in the Drop Space');
-    //newUploadBox.style.backgroundColor = '#cccccc';
 });
-
 newUploadBox.addEventListener('dragleave', (event) => {
     console.log('NEWUPLOAD File has left the Drop Space');
-    //newUploadBox.style.backgroundColor = '#ffffff'
 });
 
-//when upload modal is hidden, clear input values
+//when new upload modal is hidden, clear input values
 $('#uploadModal').on('hidden.bs.modal', function (e) {
     document.getElementById('newUploadImageFileList').innerHTML = ''
     document.getElementById('newUploadAudioFileList').innerHTML = ''
@@ -55,7 +45,8 @@ $('#uploadModal').on('hidden.bs.modal', function (e) {
         .prop("checked", "")
         .end();
 })
-//when upload modal is shown, click input field
+
+//when new upload modal is shown, click input field
 $('#uploadModal').on('shown.bs.modal', function (e) {
     //if enter key is pressed, click confirm
     $(document).keypress(function (e) {
@@ -66,7 +57,8 @@ $('#uploadModal').on('shown.bs.modal', function (e) {
     //make input field focused
     $('input:text:visible:first', this).focus();
 })
-//whn delete modal is shown, if enter is pressed -> click confirm
+
+//when delete modal is shown, if enter is pressed -> click confirm
 $('#deleteModal').on('shown.bs.modal', function (e) {
     //if enter key is pressed, click confirm
     $(document).keypress(function (e) {
@@ -75,29 +67,10 @@ $('#deleteModal').on('shown.bs.modal', function (e) {
         }
     })
 })
-/*
-Function
-*/
-function getDatatableContents(datatableID) {
-    var table = $(`#${datatableID}`).DataTable();
-    var data = table.rows().data();
-    console.log('The table has ' + data.length);
-    for (var i = 0; i < data.length; i++) {
-        console.log(`row[${i}] = `, data[i])
-    }
 
-}
-
-function getRandomNumbers() {
-    const typedArray = new Uint8Array(5);
-    const randomValues = window.crypto.getRandomValues(typedArray);
-    return randomValues.join('');
-}
-
+//new upload
 async function addNewUpload(uploadTitle) {
     console.log('addNewUpload() newUploadFiles = ', newUploadFiles)
-    //get unique uploadId timestamp
-    var uploadId = getRandomNumbers()
 
     //get unique uploadNumber
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
@@ -161,17 +134,12 @@ async function deleteUpload(uploadId) {
 
 }
 
-
-async function getLocalStorage(input) {
-    var item = await JSON.parse(localStorage.getItem(input))
-    console.log(item)
-}
-
-async function deleteAllUploads(){
+async function deleteAllUploads() {
     await localStorage.setItem('uploadList', JSON.stringify({}))
     document.getElementById('uploadList').innerHTML = ''
 }
 
+//create dataset for the table in an upload
 async function createDataset(uploadFiles, uploadNumber) {
     return new Promise(async function (resolve, reject) {
         //create img selection part of form
@@ -185,7 +153,7 @@ async function createDataset(uploadFiles, uploadNumber) {
         } catch (err) {
 
         }
-    
+
         //create dataset
         let dataSet = []
         let fileCount = 1;
@@ -193,7 +161,7 @@ async function createDataset(uploadFiles, uploadNumber) {
             //for each audio file
             for (var x = 0; x < uploadFiles['audio'].length; x++) {
                 var audioObj = uploadFiles['audio'][x]
-                
+
                 //create img selection form
                 var imgSelectionSelect = `<select style='width:150px' id='upload_${uploadNumber}_table-audio-${x}-img_choice' >`
                 imgSelectionSelect = imgSelectionSelect + imageSelectionOptions + `</select>`
@@ -229,9 +197,11 @@ async function createDataset(uploadFiles, uploadNumber) {
         resolve(dataSet)
     })
 }
-function setAllVidFormats(uploadNum, rowNum, choice){
 
-    for(var x = 0; x < rowNum; x++){
+//set every video-format in table
+function setAllVidFormats(uploadNum, rowNum, choice) {
+
+    for (var x = 0; x < rowNum; x++) {
         document.getElementById(`upload_${uploadNum}_table-vidFormat-row_${x}`).selectedIndex = `${choice}`
 
         console.log(`document.getElementById('upload_${uploadNum}_table-vidFormat-row_${x}').selectedIndex = ${choice}`)
@@ -240,6 +210,8 @@ function setAllVidFormats(uploadNum, rowNum, choice){
 
     //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
 }
+
+//create new upload, add datatable and event-listeners
 async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
     return new Promise(async function (resolve, reject) {
@@ -352,7 +324,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         var uploadImageSelectionColHeader = document.createElement('select')
         uploadImageSelectionColHeader.setAttribute('id', `upload-${uploadNumber}-imageOptionsCol`)
         uploadImageSelectionColHeader.setAttribute('style', `max-width:150px; text-align: left;`)
-       
+
         try {
             for (var x = 0; x < uploadFiles.images.length; x++) {
                 var rowImg = document.createElement('option')
@@ -365,34 +337,34 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         }
         //add image dropdown selection to table html
-       document.getElementById(`upload_${uploadNumber}_table-image-col`).appendChild(uploadImageSelectionColHeader)
+        document.getElementById(`upload_${uploadNumber}_table-image-col`).appendChild(uploadImageSelectionColHeader)
 
-       //create full album button image selection
-       var fullAlbumImageSelectionColHeader = document.createElement('select')
-       fullAlbumImageSelectionColHeader.setAttribute('id', `upload_${uploadNumber}_fullAlbumImgChoice`)
-       fullAlbumImageSelectionColHeader.setAttribute('style', `max-width:150px; text-align: left;`)
-      
-       try {
-           for (var x = 0; x < uploadFiles.images.length; x++) {
-               var rowImg = document.createElement('option')
-               rowImg.setAttribute('value', x)
-               rowImg.setAttribute('style', `width:150px; text-align: left;`)
-               rowImg.innerHTML = `${uploadFiles.images[x].name}`
-               fullAlbumImageSelectionColHeader.appendChild(rowImg)
-           }
-       } catch (err) {
+        //create full album button image selection
+        var fullAlbumImageSelectionColHeader = document.createElement('select')
+        fullAlbumImageSelectionColHeader.setAttribute('id', `upload_${uploadNumber}_fullAlbumImgChoice`)
+        fullAlbumImageSelectionColHeader.setAttribute('style', `max-width:150px; text-align: left;`)
 
-       }
-       //add full album button img selection to upload_${uploadNumber}_fullAlbumImgChoiceDiv
-       document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoiceDiv`).appendChild(fullAlbumImageSelectionColHeader)
-       //prevent clicking full album img option from clicking full album button
-       document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoice`).addEventListener("click", function(event){
-        event.preventDefault()
+        try {
+            for (var x = 0; x < uploadFiles.images.length; x++) {
+                var rowImg = document.createElement('option')
+                rowImg.setAttribute('value', x)
+                rowImg.setAttribute('style', `width:150px; text-align: left;`)
+                rowImg.innerHTML = `${uploadFiles.images[x].name}`
+                fullAlbumImageSelectionColHeader.appendChild(rowImg)
+            }
+        } catch (err) {
+
+        }
+        //add full album button img selection to upload_${uploadNumber}_fullAlbumImgChoiceDiv
+        document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoiceDiv`).appendChild(fullAlbumImageSelectionColHeader)
+        //prevent clicking full album img option from clicking full album button
+        document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoice`).addEventListener("click", function (event) {
+            event.preventDefault()
         });
 
 
         //create dataset
-        let data = await createDataset(uploadFiles, uploadNumber)       
+        let data = await createDataset(uploadFiles, uploadNumber)
 
         var reorder = false;
         var searched = false;
@@ -428,7 +400,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     searchable: false,
                     orderable: false,
                     targets: 1,
-                    
+
                 },
                 {//select all checkbox
                     "className": 'selectall-checkbox',
@@ -463,18 +435,18 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     orderable: false
                 },
                 {//audioFilepath
-                    targets:7,
-                    visible:false,
+                    targets: 7,
+                    visible: false,
                 }
             ],
             "language": {
                 "emptyTable": "No files in this upload"
-              },
+            },
             dom: 'rt',
             rowReorder: {
                 dataSrc: 'sequence',
             },
-            
+
         });
 
         var count = 1;
@@ -489,21 +461,21 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "imgSelection": i.imgSelection,
                 "outputFormat": i.vidFormatSelection,
                 //"outputLocation": "temp output location",
-                "audioFilepath":i.audioFilepath,
+                "audioFilepath": i.audioFilepath,
             }).node().id = 'rowBrowseId' + i.sampleItemId;
             count++;
         });
         table.draw();
 
         //image selection changed
-        $(`#upload-${uploadNumber}-imageOptionsCol`).change(function(event) {
+        $(`#upload-${uploadNumber}-imageOptionsCol`).change(function (event) {
             console.log(`upload-1-imageOptionsCol clicked`)
             let indexValueImgChoice = $(`#upload-${uploadNumber}-imageOptionsCol`).val()
             console.log('set all to ', indexValueImgChoice)
-            table.rows().eq(0).each( function ( index ) {
+            table.rows().eq(0).each(function (index) {
                 console.log('index = ', index)
                 document.getElementById(`upload_${uploadNumber}_table-image-row_${index}`).selectedIndex = `${indexValueImgChoice}`
-            } );
+            });
         });
 
         /*
@@ -512,14 +484,14 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             e.stopPropagation();
           } );
           */
-    
-        $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e){
+
+        $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e) {
             console.log('Begin Concat Audio Command')
-        
+
             fullAlbum(`upload-${uploadNumber}`, uploadNumber)
-       
+
         })
-      
+
 
         /*
 
@@ -528,46 +500,46 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             
 
             */
-            
+
         //select all checkbox clicked
         $(`#upload_${uploadNumber}_table-selectAll`).on('click', function (event) {
             let checkedStatus = document.getElementById(`upload_${uploadNumber}_table-selectAll`).checked
-            if(checkedStatus == true){
+            if (checkedStatus == true) {
                 //box is going from unchecked to checked, so select all
                 var rows = table.rows().nodes();
                 $('input[type="checkbox"]', rows).prop('checked', true);
                 table.$("tr").addClass('selected')
-            }else{
+            } else {
                 //unselect all
                 var rows = table.rows().nodes();
                 $('input[type="checkbox"]', rows).prop('checked', false);
                 table.$("tr").removeClass('selected')
-                
-                
+
+
             }
-            
+
             updateFullAlbumDisplayInfo(table, uploadNumber)
-            
+
         });
 
         //row clicked
-        $(`#upload_${uploadNumber}_table tbody`).on( 'click', 'tr', function () {        
+        $(`#upload_${uploadNumber}_table tbody`).on('click', 'tr', function () {
             //determine whether or not to select/deselect & check/uncheck row
             //var count = $(`#upload_${uploadNumber}_table`).find('input[type=checkbox]:checked').length;
             //document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
             //document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
-            
+
             var isSelected = $(this).hasClass('selected')
             $(this).toggleClass('selected').find(':checkbox').prop('checked', !isSelected);
 
             updateFullAlbumDisplayInfo(table, uploadNumber)
-   
-            
-            
+
+
+
         });
-        
+
         //video output format selection changed
-        $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function(event) {
+        $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function (event) {
             console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
             let indexValueImgChoice = $(`#upload_${uploadNumber}_table-vidFormat-col`).val()
             var rowNum = table.data().count();
@@ -576,30 +548,30 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //    document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${x}`).selectedIndex = `${indexValueImgChoice}`
             //}
             //table.rows().eq(0).each( function ( index ) {
-                //var elem = document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`)
-                //console.log(`elem = `, elem)
-                //console.log(`elem.selectedIndex = `, elem.selectedIndex)
-                //document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`).selectedIndex = `${indexValueImgChoice}`
-                //elem.selectedIndex = 1
-                //setAllVidFormats(uploadNum, indexValueImgChoice)
+            //var elem = document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`)
+            //console.log(`elem = `, elem)
+            //console.log(`elem.selectedIndex = `, elem.selectedIndex)
+            //document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+            //elem.selectedIndex = 1
+            //setAllVidFormats(uploadNum, indexValueImgChoice)
             //} );
             //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
 
             setAllVidFormats(uploadNumber, rowNum, indexValueImgChoice)
         });
 
-        $(`#upload_${uploadNumber}_table-vidLocationButton`).on('click',function(event) {
+        $(`#upload_${uploadNumber}_table-vidLocationButton`).on('click', function (event) {
             $(`#upload_${uploadNumber}_table-vidLocation`).click()
         })
 
-        $(`#upload_${uploadNumber}_table-vidLocation`).change(function(event) {
+        $(`#upload_${uploadNumber}_table-vidLocation`).change(function (event) {
             var filePath = document.getElementById(`upload_${uploadNumber}_table-vidLocation`).files[0].path
             console.log('filePath = ', filePath)
             console.log('process.platform  =', process.platform)
-            if((process.platform).includes('win')){
+            if ((process.platform).includes('win')) {
                 var parseChar = "\\"
             }
-            var path = (filePath.substring(0, filePath.lastIndexOf(parseChar)))+parseChar
+            var path = (filePath.substring(0, filePath.lastIndexOf(parseChar))) + parseChar
             console.log('path = ', path)
             document.getElementById(`upload_${uploadNumber}_table-vidLocationButton`).innerText = path
 
@@ -685,7 +657,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //don't adjust the "#" column in the search and order events
             reorder = true;
         });
-        
+
         //row-reorder
         table.on('row-reorder', function (e, diff, edit) {
             var result = 'Reorder started on row: ' + edit.triggerRow.data()[1] + '<br>';
@@ -704,7 +676,8 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
     })
 }
 
-async function renderIndividual(uploadNumber){
+//render individual videos for an upload
+async function renderIndividual(uploadNumber) {
     console.log('renderIndividual() uploadNumber = ', uploadNumber)
     //get table
     var table = $(`#upload_${uploadNumber}_table`).DataTable()
@@ -712,15 +685,15 @@ async function renderIndividual(uploadNumber){
     var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
     var upload = uploadList[`upload-${uploadNumber}`]
     //get all selected rows
-    var selectedRows = table.rows( '.selected' ).data()
+    var selectedRows = table.rows('.selected').data()
     //get dir
     var path = require('path');
     var outputDir = path.dirname(selectedRows[0].audioFilepath)
     console.log('path.sep = ', path.sep)
-    for(var i = 0; i < selectedRows.length; i++){
+    for (var i = 0; i < selectedRows.length; i++) {
         console.log(i, ': ', selectedRows[i])
         //get song number:
-        let songNum = (selectedRows[i].sequence)-1
+        let songNum = (selectedRows[i].sequence) - 1
         //get img selection
         let imgChoice = document.getElementById(`upload_${uploadNumber}_table-audio-${songNum}-img_choice`).value
         let imgInput = upload.files.images[imgChoice].path
@@ -730,7 +703,7 @@ async function renderIndividual(uploadNumber){
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
         //create output file
-        let vidOutput = `${outputDir}${path.sep}${songName}.mp4` 
+        let vidOutput = `${outputDir}${path.sep}${songName}.mp4`
         console.log('vidOutput=', vidOutput)
         //render vid
         let updateInfoLocation = `upload_${uploadNumber}_IndividualRenderStatus`
@@ -738,24 +711,25 @@ async function renderIndividual(uploadNumber){
         await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
 
     }
-    
+
     //get upload from upload-list
     //get all selected rows
 }
 
+//render a full album upload
 async function fullAlbum(uploadName, uploadNumber) {
     document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = 'Generating Audio: 0%'
 
     //get table
     var table = $(`#upload_${uploadNumber}_table`).DataTable()
     //get all selected rows
-    var selectedRows = table.rows( '.selected' ).data()
+    var selectedRows = table.rows('.selected').data()
     //get outputFile location
     var path = require('path');
     var outputDir = path.dirname(selectedRows[0].audioFilepath)
     //create outputfile
     var timestamp = new Date().getUTCMilliseconds();
-    let outputFilepath = `${outputDir}${path.sep}output-${timestamp}.mp3` 
+    let outputFilepath = `${outputDir}${path.sep}output-${timestamp}.mp3`
 
     //create concat audio file
     await combineMp3FilesOrig(selectedRows, outputFilepath, '320k', timestamp, uploadNumber);
@@ -765,8 +739,8 @@ async function fullAlbum(uploadName, uploadNumber) {
     var upload = uploadList[`upload-${uploadNumber}`]
     let imgChoice = document.getElementById(`upload_${uploadNumber}_fullAlbumImgChoice`).value
     let imgInput = upload.files.images[imgChoice].path
-    
-    let vidOutput = `${outputDir}${path.sep}fullAlbum-${timestamp}.mp4` 
+
+    let vidOutput = `${outputDir}${path.sep}fullAlbum-${timestamp}.mp4`
     console.log('imgInput = ', imgInput)
     let updateInfoLocation = `upload_${uploadNumber}_fullAlbumStatus`
     await generateVid(outputFilepath, imgInput, vidOutput, updateInfoLocation)
@@ -779,23 +753,25 @@ async function fullAlbum(uploadName, uploadNumber) {
     console.log('after caclling deleting file')
 }
 
-function deleteFile(path){
+//delete file on the user's machine
+function deleteFile(path) {
     console.log('deleteFile()')
     const fs = require('fs')
     fs.unlink(path, (err) => {
-    if (err) {
-        console.error("err deleting file = ", err)
-        return
-    }
+        if (err) {
+            console.error("err deleting file = ", err)
+            return
+        }
 
-    
-    console.log('file removed')
 
-    //file removed
+        console.log('file removed')
+
+        //file removed
     })
 }
 
-async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation){
+//generate video using image and audio
+async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
     return new Promise(async function (resolve, reject) {
         console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
         document.getElementById(updateInfoLocation).innerText = `Generating Video: 0%`
@@ -811,52 +787,52 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation){
         ffmpeg.setFfmpegPath(ffmpegPath);
         ffmpeg.setFfprobePath(ffprobePath);
         //end set ffmpeg info
-        
+
         ffmpeg()
-        .input(imgPath)
-        .loop()
-        .addInputOption('-framerate 2')
-        .input(audioPath)
-        .videoCodec('libx264')
-        .audioCodec('copy')
-        .audioBitrate('320k')
-        .videoBitrate('8000k', true) 
-        .size('1920x1080')
-        .outputOptions([
-            '-preset medium',
-            '-tune stillimage',
-            '-crf 18',
-            '-pix_fmt yuv420p',
-            '-shortest'
-        ])
-        .size('50%')
-        
-        .on('progress', function(progress) {
-            document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
-            console.info(`vid() Processing : ${progress.percent} % done`);
-        })
-        .on('codecData', function(data) {
-            console.log('vid() codecData=',data);
-        })
-        .on('end', function() {
-            document.getElementById(updateInfoLocation).innerText = `Video generated.`
-            console.log('vid()  file has been converted succesfully; resolve() promise');
-            resolve();
-        })
-        .on('error', function(err) {
-            document.getElementById(updateInfoLocation).innerText = `Error generating video.`
-            console.log('vid() an error happened: ' + err.message, ', reject()');
-            reject(err);
-        })
-        .output(vidOutput).run()
+            .input(imgPath)
+            .loop()
+            .addInputOption('-framerate 2')
+            .input(audioPath)
+            .videoCodec('libx264')
+            .audioCodec('copy')
+            .audioBitrate('320k')
+            .videoBitrate('8000k', true)
+            .size('1920x1080')
+            .outputOptions([
+                '-preset medium',
+                '-tune stillimage',
+                '-crf 18',
+                '-pix_fmt yuv420p',
+                '-shortest'
+            ])
+            .size('50%')
+
+            .on('progress', function (progress) {
+                document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                console.info(`vid() Processing : ${progress.percent} % done`);
+            })
+            .on('codecData', function (data) {
+                console.log('vid() codecData=', data);
+            })
+            .on('end', function () {
+                document.getElementById(updateInfoLocation).innerText = `Video generated.`
+                console.log('vid()  file has been converted succesfully; resolve() promise');
+                resolve();
+            })
+            .on('error', function (err) {
+                document.getElementById(updateInfoLocation).innerText = `Error generating video.`
+                console.log('vid() an error happened: ' + err.message, ', reject()');
+                reject(err);
+            })
+            .output(vidOutput).run()
 
     })
 }
 
-
+//combine multiple audio files into one long audio file
 async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber) {
     console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
-    
+
     //begin get ffmpeg info
     const ffmpeg = require('fluent-ffmpeg');
     //Get the paths to the packaged versions of the binaries we want to use
@@ -877,31 +853,31 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\4. Civilian Barracks.flac') //05:52
     //add inputs
     var count = selectedRows.length;
-    for(var i = 0; i < count; i++){
+    for (var i = 0; i < count; i++) {
         command.input(selectedRows[i].audioFilepath)
-    } 
+    }
 
     return new Promise((resolve, reject) => {
         console.log(`combineMp3FilesOrig(): command status logging`)
-        command.on('progress', function(progress) {
+        command.on('progress', function (progress) {
             console.info(`Processing : ${progress.percent} % done`);
             document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
         })
-        .on('codecData', function(data) {
-            console.log('codecData=',data);
-        })
-        .on('end', function() {
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
-            console.log('file has been converted succesfully; resolve() promise');
-            resolve();
-        })
-        .on('error', function(err) {
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
-            console.log('an error happened: ' + err.message, ', reject()');
-            reject(err);
-        })
+            .on('codecData', function (data) {
+                console.log('codecData=', data);
+            })
+            .on('end', function () {
+                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
+                console.log('file has been converted succesfully; resolve() promise');
+                resolve();
+            })
+            .on('error', function (err) {
+                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
+                console.log('an error happened: ' + err.message, ', reject()');
+                reject(err);
+            })
         console.log(`combineMp3FilesOrig(): add audio bitrate to command`)
-   
+
         console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
         command.mergeToFile(outputFilepath);
         command.audioBitrate(bitrate)
@@ -911,190 +887,28 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     console.log(`combineMp3FilesOrig(): end of function`)
 }
 
-let isConcatAudioRunning = false
-
-async function generateConcatAudio(selectedRows){
-    return new Promise(async function (resolve, reject) {
-            //use path to get dir of where an audioFile is located, and use that to create the outputFilepath
-            var path = require('path');
-            var outputDir = path.dirname(selectedRows[0].audioFilepath)
-            //create outputfile
-            let outputFile = `${outputDir}/concatAudio.mp3`
-
-             //begin get ffmpeg info
-            const ffmpeg = require('fluent-ffmpeg');
-            //Get the paths to the packaged versions of the binaries we want to use
-            const ffmpegPath = require('ffmpeg-static').replace(
-                'app.asar',
-                'app.asar.unpacked'
-            );
-            const ffprobePath = require('ffprobe-static').path.replace(
-                'app.asar',
-                'app.asar.unpacked'
-            );
-            //tell the ffmpeg package where it can find the needed binaries.
-            ffmpeg.setFfmpegPath(ffmpegPath);
-            ffmpeg.setFfprobePath(ffprobePath);
-            //end get ffmpeg info
-            
-            
-            //create ffmpeg command
-            const command = ffmpeg();
-            //add inputs
-            var count = selectedRows.length;
-            for(var i = 0; i < count; i++){
-                command.input(selectedRows[i].audioFilepath)
-            }   
-            console.log('runConcatAudioCommand() adding more to command')
-            //status updates
-            command.on('progress', function(progress) {
-                console.info(`Processing : ${progress.percent} % done`);
-            })
-            .on('start', function(data) {
-                isConcatAudioRunning = true;
-                console.log('start ');
-            })
-            .on('codecData', function(data) {
-                console.log('codecData=',data);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully, resolving');
-                
-                resolve(outputFile)
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-                //resolve('err')
-            })
-            .audioBitrate('320k')
-            .mergeToFile(outputFile)
-            //var outputFile = `${outputDir}/MERGEDAUDIO.mp3`
-            //var outputFileVid = `${outputDir}vvvvv.mp4`
-            //console.log('outputFile = ', outputFile)
-            
-            //trigger once
-            //let commandRspInit = runConcatAudioCommand(selectedRows, outputDir)
-            
-            //console.log('commandRspInit = ', commandRspInit)
-            //let resp = await exec()
-            //console.log('after wait')
-            //console.log('isConcatAudioRunning == ', isConcatAudioRunning)
-            /*
-            while(isConcatAudioRunning == false){
-                console.log('isConcatAudioRunning == false')
-                await wait(6)
-                //wait till done
-                let commandRsp = runConcatAudioCommand(selectedRows, outputDir)
-                console.log('commandRsp = ', commandRsp)
-            }
-            console.log('isConcatAudioRunning != false')
-            //should be saved at outputDir
-            
-
-            resposne('done ge)
-*/
-           
-
-    })
-}
-//the code will execute in 1 3 5 7 9 seconds later
-function exec() {
-    return new Promise(async function (resolve, reject) {
-    for(var i=0;i<1;i++) {
-        setTimeout(function() {
-            console.log(new Date());   //It's you code
-        },(i+i+1)*1000);
-    }
-    resolve('done')
-})
-}
-
-async function runConcatAudioCommand(selectedRows, outputDir){
-    return new Promise(async function (resolve, reject) {
-        //begin get ffmpeg info
-        const ffmpeg = require('fluent-ffmpeg');
-        //Get the paths to the packaged versions of the binaries we want to use
-        const ffmpegPath = require('ffmpeg-static').replace(
-            'app.asar',
-            'app.asar.unpacked'
-        );
-        const ffprobePath = require('ffprobe-static').path.replace(
-            'app.asar',
-            'app.asar.unpacked'
-        );
-        //tell the ffmpeg package where it can find the needed binaries.
-        ffmpeg.setFfmpegPath(ffmpegPath);
-        ffmpeg.setFfprobePath(ffprobePath);
-        //end get ffmpeg info
-
-        console.log('runConcatAudioCommand()')
-        //create ffmpeg command
-        const command = ffmpeg();
-        //add inputs
-        var count = selectedRows.length;
-        for(var i = 0; i < count; i++){
-            command.input(selectedRows[i].audioFilepath)
-        }   
-        console.log('runConcatAudioCommand() adding more to command')
-        //status updates
-        command.on('progress', function(progress) {
-            console.info(`Processing : ${progress.percent} % done`);
-        })
-        .on('start', function(data) {
-            isConcatAudioRunning = true;
-            console.log('start ');
-        })
-        .on('codecData', function(data) {
-            console.log('codecData=',data);
-        })
-        .on('end', function() {
-            console.log('file has been converted succesfully, resolving');
-            
-            resolve('DONE')//outputFile)
-        })
-        .on('error', function(err) {
-            console.log('an error happened: ' + err.message);
-            //resolve('err')
-        })
-        .audioBitrate('320k')
-        .mergeToFile(`${outputDir}/concatAudio.mp3`)
-        //resolve('done')
-    });
-
-        //command.run()
-}
-
-function waitSeconds(iMilliSeconds) {
-    var counter= 0
-        , start = new Date().getTime()
-        , end = 0;
-    while (counter < iMilliSeconds) {
-        end = new Date().getTime();
-        counter = end - start;
-    }
-}
-
-async function updateFullAlbumDisplayInfo(table, uploadNumber){
+//update full album button info in an upload
+async function updateFullAlbumDisplayInfo(table, uploadNumber) {
     //get all selected rows
-    var selectedRows = table.rows( '.selected' ).data()
+    var selectedRows = table.rows('.selected').data()
     //get number of selected tracks
     var count = selectedRows.length;
     //get total length of full album vid
     var fullAlbumLength = ''
     var fullAlbumTracklist = ''
-    for(var i = 0; i < count; i++){
+    for (var i = 0; i < count; i++) {
         fullAlbumTracklist = `${fullAlbumTracklist}${selectedRows[i].audio}<br>`
         //set prevTime
         var prevTime = ''
-        if(fullAlbumLength == ''){
+        if (fullAlbumLength == '') {
             prevTime = '0:00:00'
-        }else{
+        } else {
             prevTime = fullAlbumLength
         }
         //set currTime
         var currTime = selectedRows[i].length
         //calculate sum
-        fullAlbumLength = sum(prevTime , currTime );
+        fullAlbumLength = sum(prevTime, currTime);
     }
     //set fullAlbumLength var
     document.getElementById(`upload_${uploadNumber}_fullAlbumLength`).innerText = fullAlbumLength
@@ -1102,15 +916,16 @@ async function updateFullAlbumDisplayInfo(table, uploadNumber){
 
     //set tracklist
     document.getElementById(`upload_${uploadNumber}_fullAlbumTracklist`).innerHTML = fullAlbumTracklist
-    
+
     //set count
     document.getElementById(`upload_${uploadNumber}_numChecked`).innerText = count
     document.getElementById(`upload_${uploadNumber}_numCheckedFullAlbum`).innerText = count
 
-    
+
 
 }
 
+//update which uploads are displayed
 async function updateUploadListDisplay() {
     let uploadListDisplay = document.getElementById('uploadList')
 
@@ -1154,6 +969,7 @@ async function updateUploadListDisplay() {
 
 }
 
+//add new upload to uploadList
 async function addToUploadList(uploadKey, uploadValue) {
     return new Promise(async function (resolve, reject) {
 
@@ -1187,10 +1003,9 @@ async function addToUploadList(uploadKey, uploadValue) {
     })
 }
 
-
-
+//when files are dragged into upload drag&drop space
 async function newUploadFileDropEvent(event, preventDefault) {
-    if(preventDefault){
+    if (preventDefault) {
         event.preventDefault();
         event.stopPropagation();
     }
@@ -1205,18 +1020,18 @@ async function newUploadFileDropEvent(event, preventDefault) {
         } else if ((f.type).includes('audio')) {
             var splitType = (f.type).split('/')
             var audioFormat = splitType[1]
-       
+
             let audioLength = await getDuration(f.path)
             console.log('raw audioLength = ', audioLength)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-     
+
             fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength })
         }
     }
     newUploadFiles = fileList
     console.log('newUploadFiles = ', newUploadFiles)
 
-    
+
 
     //display files in UI
     var imageFilesHtml = ''
@@ -1245,21 +1060,23 @@ async function newUploadFileDropEvent(event, preventDefault) {
     //addNewUpload(fileList)
 }
 
-function sum(date1, date2){
+//helper function to get sum of two timestamps
+function sum(date1, date2) {
     date1 = date1.split(":");
     date2 = date2.split(":");
     const result = [];
-  
-    date1.reduceRight((carry,num, index) => {
-      const max = [24,60,60][index];
-      const add =  +date2[index];
-      result.unshift( (+num+add+carry) % max );
-      return Math.floor( (+num + add + carry) / max );
-    },0);
-  
-    return result.map(r => String(r).padStart(2, "0")).join(":");
-  }
 
+    date1.reduceRight((carry, num, index) => {
+        const max = [24, 60, 60][index];
+        const add = +date2[index];
+        result.unshift((+num + add + carry) % max);
+        return Math.floor((+num + add + carry) / max);
+    }, 0);
+
+    return result.map(r => String(r).padStart(2, "0")).join(":");
+}
+
+//get duration of audio file
 function getDuration(src) {
     return new Promise(function (resolve) {
         var audio = new Audio();
@@ -1270,85 +1087,16 @@ function getDuration(src) {
     });
 }
 
-async function ffmpegSingleRender(audioPath, imgPath, videoPath){
-    console.log('ffmpeg-test')
-    //require the ffmpeg package so we can use ffmpeg using JS
-    //const ffmpeg = require('fluent-ffmpeg');
-    //Get the paths to the packaged versions of the binaries we want to use
-    const ffmpegPath = require('ffmpeg-static').replace(
-        'app.asar',
-        'app.asar.unpacked'
-    );
-    const ffprobePath = require('ffprobe-static').path.replace(
-        'app.asar',
-        'app.asar.unpacked'
-    );
-    //tell the ffmpeg package where it can find the needed binaries.
-    ffmpeg.setFfmpegPath(ffmpegPath);
-    ffmpeg.setFfprobePath(ffprobePath);
-    var audioPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\3. Yaldut.flac"
-    var imgPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\front.jpg"
-    var videoPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\Yaldut.mp4"
-    var outputPath = "C:\\Users\\marti\\Documents\\martinradio\\uploads\\israel song festival 1979\\output.m4v"
-    let proc = await ffmpeg()
-    .input(audioPath)
-    .input(imgPath)
-    // using 25 fps
-    .fps(25)
-    //audio bitrate
-    .audioBitrate('320k')
-    //video bitrate
-    .videoBitrate('8000k', true) //1080p
-    //resolution
-    .size('1920x1080')
-    // setup event handlers
-    .on('end', function() {
-        console.log('file has been converted succesfully');
-    })
-    .on('error', function(err) {
-        console.log('an error happened: ' + err.message);
-    })
-    // save to file
-    .save(videoPath);
-
-    //old under not working
-    /*
-    //convert image to video
-    var proc = ffmpeg(imgPath)
-    // loop for 5 seconds
-    .loop(5)
-    // using 25 fps
-    .fps(25)
-    //audio bitrate
-    .audioBitrate('128k')
-    //video bitrate
-    .videoBitrate('8000k', true)
-    //resolution
-    .size('1920x1080')
-    // setup event handlers
-    .on('end', function() {
-        console.log('file has been converted succesfully');
-    })
-    .on('error', function(err) {
-        console.log('an error happened: ' + err.message);
-    })
-    // save to file
-    .save(outputPath);
-    */
-    console.log("end of ffmpeg-test")
-}
-
 //datatables natural sort plugin code below:
+(function () {
 
-(function() {
- 
     /*
      * Natural Sort algorithm for Javascript - Version 0.7 - Released under MIT license
      * Author: Jim Palmer (based on chunking idea from Dave Koelle)
      * Contributors: Mike Grier (mgrier.com), Clint Priest, Kyle Adams, guillermo
      * See: http://js-naturalsort.googlecode.com/svn/trunk/naturalSort.js
      */
-    function naturalSort (a, b, html) {
+    function naturalSort(a, b, html) {
         var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?%?$|^0x[0-9a-f]+$|[0-9]+)/gi,
             sre = /(^[ ]*|[ ]*$)/g,
             dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,
@@ -1358,30 +1106,30 @@ async function ffmpegSingleRender(audioPath, imgPath, videoPath){
             // convert all to strings and trim()
             x = a.toString().replace(sre, '') || '',
             y = b.toString().replace(sre, '') || '';
-            // remove html from strings if desired
-            if (!html) {
-                x = x.replace(htmre, '');
-                y = y.replace(htmre, '');
-            }
-            // chunk/tokenize
-        var xN = x.replace(re, '\0$1\0').replace(/\0$/,'').replace(/^\0/,'').split('\0'),
-            yN = y.replace(re, '\0$1\0').replace(/\0$/,'').replace(/^\0/,'').split('\0'),
+        // remove html from strings if desired
+        if (!html) {
+            x = x.replace(htmre, '');
+            y = y.replace(htmre, '');
+        }
+        // chunk/tokenize
+        var xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+            yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
             // numeric, hex or date detection
             xD = parseInt(x.match(hre), 10) || (xN.length !== 1 && x.match(dre) && Date.parse(x)),
             yD = parseInt(y.match(hre), 10) || xD && y.match(dre) && Date.parse(y) || null;
-     
+
         // first try and sort Hex codes or Dates
         if (yD) {
-            if ( xD < yD ) {
+            if (xD < yD) {
                 return -1;
             }
-            else if ( xD > yD ) {
+            else if (xD > yD) {
                 return 1;
             }
         }
-     
+
         // natural sorting through split numeric strings and default strings
-        for(var cLoc=0, numS=Math.max(xN.length, yN.length); cLoc < numS; cLoc++) {
+        for (var cLoc = 0, numS = Math.max(xN.length, yN.length); cLoc < numS; cLoc++) {
             // find floats not starting with '0', string or 0 if not defined (Clint Priest)
             var oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc], 10) || xN[cLoc] || 0;
             var oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc], 10) || yN[cLoc] || 0;
@@ -1403,37 +1151,37 @@ async function ffmpegSingleRender(audioPath, imgPath, videoPath){
         }
         return 0;
     }
-     
-    jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-        "natural-asc": function ( a, b ) {
-            return naturalSort(a,b,true);
+
+    jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+        "natural-asc": function (a, b) {
+            return naturalSort(a, b, true);
         },
-     
-        "natural-desc": function ( a, b ) {
-            return naturalSort(a,b,true) * -1;
+
+        "natural-desc": function (a, b) {
+            return naturalSort(a, b, true) * -1;
         },
-     
-        "natural-nohtml-asc": function( a, b ) {
-            return naturalSort(a,b,false);
+
+        "natural-nohtml-asc": function (a, b) {
+            return naturalSort(a, b, false);
         },
-     
-        "natural-nohtml-desc": function( a, b ) {
-            return naturalSort(a,b,false) * -1;
+
+        "natural-nohtml-desc": function (a, b) {
+            return naturalSort(a, b, false) * -1;
         },
-     
-        "natural-ci-asc": function( a, b ) {
+
+        "natural-ci-asc": function (a, b) {
             a = a.toString().toLowerCase();
             b = b.toString().toLowerCase();
-     
-            return naturalSort(a,b,true);
+
+            return naturalSort(a, b, true);
         },
-     
-        "natural-ci-desc": function( a, b ) {
+
+        "natural-ci-desc": function (a, b) {
             a = a.toString().toLowerCase();
             b = b.toString().toLowerCase();
-     
-            return naturalSort(a,b,true) * -1;
+
+            return naturalSort(a, b, true) * -1;
         }
-    } );
-     
-    }());
+    });
+
+}());
