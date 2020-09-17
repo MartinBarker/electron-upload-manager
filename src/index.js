@@ -305,6 +305,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                         <!-- Render Individual Button -->
                         <div class="card ml-5 mr-5 mt-1 renderOption" type='button' onclick="renderIndividual(${uploadNumber})">
                             <div class='card-body'>
+                                <strong><a style='float:right' id='upload_${uploadNumber}_IndividualRenderStatus'></a></strong>
                                 <i class="uploadIndividual fa fa-plus-circle" aria-hidden="true"></i>Render <a id='upload_${uploadNumber}_numChecked'>0</a> individual files
                             </div>
                         </div>
@@ -732,7 +733,9 @@ async function renderIndividual(uploadNumber){
         let vidOutput = `${outputDir}${path.sep}${songName}.mp4` 
         console.log('vidOutput=', vidOutput)
         //render vid
-        await generateVid(audioFilepath, imgInput, vidOutput, uploadNumber)
+        let updateInfoLocation = `upload_${uploadNumber}_IndividualRenderStatus`
+        document.getElementById(updateInfoLocation).innerHTML = ''
+        await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
 
     }
     
@@ -765,7 +768,8 @@ async function fullAlbum(uploadName, uploadNumber) {
     
     let vidOutput = `${outputDir}${path.sep}fullAlbum-${timestamp}.mp4` 
     console.log('imgInput = ', imgInput)
-    await generateVid(outputFilepath, imgInput, vidOutput, uploadNumber)
+    let updateInfoLocation = `upload_${uploadNumber}_fullAlbumStatus`
+    await generateVid(outputFilepath, imgInput, vidOutput, updateInfoLocation)
     //await generateVid(selectedRows[0].audioFilepath, imgInput, vidOutput, uploadNumber)
 
     console.log('deleting file')
@@ -791,10 +795,10 @@ function deleteFile(path){
     })
 }
 
-async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
+async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation){
     return new Promise(async function (resolve, reject) {
         console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
-        document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Video: 0%`
+        document.getElementById(updateInfoLocation).innerText = `Generating Video: 0%`
 
         //begin get ffmpeg info
         const ffmpeg = require('fluent-ffmpeg');
@@ -807,33 +811,6 @@ async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
         ffmpeg.setFfmpegPath(ffmpegPath);
         ffmpeg.setFfprobePath(ffprobePath);
         //end set ffmpeg info
- /*
-        let audioFilePath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\01.i like to get near you.mp3'
-  
-        let imgFilePath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\front.jpg'
-        let videoPath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\YOUTUBE.mp4'
-
-      
-      ffmpeg()
-            .input(coverFile)
-            .loop()
-            .addInputOption('-framerate 2')
-            .input(mp3File)
-            .videoCodec('libx264')
-            .audioCodec('copy')
-            .outputOptions([
-              '-preset medium',
-              '-tune stillimage',
-              '-crf 18',
-              '-pix_fmt yuv420p',
-              '-shortest'
-            ])
-           .output(orderFolder + '/output.mp4')
-        */
-
-        //audioPath = 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\01.i like to get near you.mp3'
-            
-        //ffmpeg -loop 1 -framerate 2 -i "'+ imageFilepath +'" -i "'+ sourceAudioFilepath +'" -vf "scale=2*trunc(iw/2):2*trunc(ih/2),setsar=1" -c:v libx264 -preset medium -tune stillimage -crf 18 -c:a copy -b:a 320k -shortest -vf scale=' + resolution + ' -pix_fmt yuv420p "'+ outputFilename  +'.mp4"'
         
         ffmpeg()
         .input(imgPath)
@@ -855,44 +832,23 @@ async function generateVid(audioPath, imgPath, vidOutput, uploadNumber){
         .size('50%')
         
         .on('progress', function(progress) {
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+            document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
             console.info(`vid() Processing : ${progress.percent} % done`);
         })
         .on('codecData', function(data) {
             console.log('vid() codecData=',data);
         })
         .on('end', function() {
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Video generated.`
+            document.getElementById(updateInfoLocation).innerText = `Video generated.`
             console.log('vid()  file has been converted succesfully; resolve() promise');
             resolve();
         })
         .on('error', function(err) {
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating video.`
+            document.getElementById(updateInfoLocation).innerText = `Error generating video.`
             console.log('vid() an error happened: ' + err.message, ', reject()');
             reject(err);
         })
         .output(vidOutput).run()
-  
-        /*
-        .input(audioPath)
-        .input(imgPath)
-        .audioBitrate('320k')
-        .videoBitrate('8000k', true) //1080p
-        .size('1920x1080')
-        .outputOptions('-c:v libx264')
-        .outputOptions('-pix_fmt yuv420p')
-        .outputOptions('-f mp4')
-
-
-        //ffmpeg -loop 1 -framerate 2 -i input.png -i audio.m4a -c:v libx264 -preset medium -tune stillimage -crf 18 -c:a copy -shortest -pix_fmt yuv420p output.mkv
-        //ffmpeg -loop 1 -framerate 2 -i imageFilepath -i sourceAudioFilepath -vf "scale=2*trunc(iw/2):2*trunc(ih/2),setsar=1" -c:v libx264 -preset medium -tune stillimage -crf 18 -c:a copy -b:a 320k -shortest -vf scale=resolution -pix_fmt yuv420p outputFilename.mp4"'
-
-
-        ffmpeg -loop 1 -framerate 2 -i 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\front.jpg' -i 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\01.i like to get near you.mp3' -vf "scale=2*trunc(iw/2):2*trunc(ih/2),setsar=1" -c:v libx264 -preset medium -tune stillimage -crf 18 -c:a copy -b:a 320k -shortest -vf scale=resolution -pix_fmt yuv420p 'C:\\Users\\marti\\Documents\\martinradio\\soulseek\\complete\\smoothergrooves\\gvcd 3008 richard caiton reflections\\YOUTUBE.mp4'
-
-
-        */
-
 
     })
 }
