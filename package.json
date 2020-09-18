@@ -1,8 +1,8 @@
 {
-  "name": "musicvideomanager",
-  "version": "0.0.1",
+  "name": "audio-archiver",
+  "version": "1.0.0",
   "description": "program to run ffmpeg commands to render music videos",
-  "author": "xyz <xyz@gmail.com>",
+  "author": "Martin <martinbarker99@gmail.com>",
   "license": "ISC",
   "main": "main.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "postinstall": "install-app-deps",
     "start": "npm install && electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "dists": "electron-builder -mwl"
   },
   "build": {
     "asarUnpack": [
