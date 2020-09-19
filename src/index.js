@@ -1021,11 +1021,16 @@ async function newUploadFileDropEvent(event, preventDefault) {
             var splitType = (f.type).split('/')
             var audioFormat = splitType[1]
 
+            //get metadata
+            console.log('calling getTrackNum()')
+            let trackNumRet = await getTrackNum(f.path)
+            console.log('trackNumRet = ', trackNumRet)
+            
+            //get audiolength
             let audioLength = await getDuration(f.path)
-            console.log('raw audioLength = ', audioLength)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-
-            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength })
+            //push results
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet})
         }
     }
     newUploadFiles = fileList
@@ -1084,6 +1089,25 @@ function getDuration(src) {
             resolve(audio.duration);
         });
         audio.src = src;
+    });
+}
+
+//get track num from audio file metadata
+function getTrackNum(src) {
+    return new Promise(function (resolve) {
+        var mm = require('music-metadata');
+        var util = require('util');
+
+        mm.parseFile(src)
+        .then( metadata => {
+            console.log('TRACK NUMBER = ', metadata.common.track.no)
+            resolve(metadata.common.track.no)
+        })
+        .catch( err => {
+            console.error('err = ', err.message);
+            reject('err')
+        });
+        
     });
 }
 
