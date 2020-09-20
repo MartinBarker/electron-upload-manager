@@ -185,6 +185,7 @@ async function createDataset(uploadFiles, uploadNumber) {
                     imgSelection: imgSelectionSelect,
                     vidFormatSelection: videoOutputSelection,
                     audioFilepath: audioObj.path,
+                    trackNum: audioObj.trackNum
                     //video output(leave empty)
                 }
                 fileCount++
@@ -246,13 +247,13 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                     <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
                                     <th>Audio</th>
                                     <th style='max-width:58px'>Length</th>
-                                    <th style='max-width:400px'>
-                                        <div >
+                                    <th style='max-width:200px'>
+                                        <div>
                                             <label>Img:</label>
                                             <div id='upload_${uploadNumber}_table-image-col'></div>
                                         </div>
                                     </th>
-                                    <th>
+                                    <th style='width:150px'>
                                         Video Format: 
                                         <div>
                                             <select id='upload_${uploadNumber}_table-vidFormat-col'>
@@ -262,6 +263,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                         </div>
                                     </th>
                                     <th>audioFilepath</th>
+                                    <th>Track Num</th>
                                     <!--
                                     <th>Video Output Folder: 
                                         <div >
@@ -388,6 +390,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 { "data": "imgSelection" },
                 { "data": "outputFormat" },
                 { "data": "audioFilepath" },
+                { "data": "trackNum" }
             ],
             columnDefs: [
                 { //invisible sequence num
@@ -437,6 +440,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 {//audioFilepath
                     targets: 7,
                     visible: false,
+                },
+                {//trackNum
+                    targets:8,
+                    visible: true,
                 }
             ],
             "language": {
@@ -462,6 +469,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "outputFormat": i.vidFormatSelection,
                 //"outputLocation": "temp output location",
                 "audioFilepath": i.audioFilepath,
+                "trackNum": i.trackNum,
             }).node().id = 'rowBrowseId' + i.sampleItemId;
             count++;
         });
@@ -1021,11 +1029,16 @@ async function newUploadFileDropEvent(event, preventDefault) {
             var splitType = (f.type).split('/')
             var audioFormat = splitType[1]
 
+            //get metadata
+            console.log('calling getTrackNum()')
+            let trackNumRet = await getTrackNum(f.path)
+            console.log('trackNumRet = ', trackNumRet)
+            
+            //get audiolength
             let audioLength = await getDuration(f.path)
-            console.log('raw audioLength = ', audioLength)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-
-            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength })
+            //push results
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet})
         }
     }
     newUploadFiles = fileList
@@ -1084,6 +1097,25 @@ function getDuration(src) {
             resolve(audio.duration);
         });
         audio.src = src;
+    });
+}
+
+//get track num from audio file metadata
+function getTrackNum(src) {
+    return new Promise(function (resolve) {
+        var mm = require('music-metadata');
+        var util = require('util');
+
+        mm.parseFile(src)
+        .then( metadata => {
+            console.log('TRACK NUMBER = ', metadata.common.track.no)
+            resolve(metadata.common.track.no)
+        })
+        .catch( err => {
+            console.error('err = ', err.message);
+            reject('err')
+        });
+        
     });
 }
 
