@@ -185,6 +185,7 @@ async function createDataset(uploadFiles, uploadNumber) {
                     imgSelection: imgSelectionSelect,
                     vidFormatSelection: videoOutputSelection,
                     audioFilepath: audioObj.path,
+                    trackNum: audioObj.trackNum
                     //video output(leave empty)
                 }
                 fileCount++
@@ -246,13 +247,13 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                     <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
                                     <th>Audio</th>
                                     <th style='max-width:58px'>Length</th>
-                                    <th style='max-width:400px'>
-                                        <div >
+                                    <th style='max-width:200px'>
+                                        <div>
                                             <label>Img:</label>
                                             <div id='upload_${uploadNumber}_table-image-col'></div>
                                         </div>
                                     </th>
-                                    <th>
+                                    <th style='width:150px'>
                                         Video Format: 
                                         <div>
                                             <select id='upload_${uploadNumber}_table-vidFormat-col'>
@@ -262,6 +263,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                                         </div>
                                     </th>
                                     <th>audioFilepath</th>
+                                    <th>Track Num</th>
                                     <!--
                                     <th>Video Output Folder: 
                                         <div >
@@ -388,6 +390,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 { "data": "imgSelection" },
                 { "data": "outputFormat" },
                 { "data": "audioFilepath" },
+                { "data": "trackNum" }
             ],
             columnDefs: [
                 { //invisible sequence num
@@ -437,6 +440,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 {//audioFilepath
                     targets: 7,
                     visible: false,
+                },
+                {//trackNum
+                    targets:8,
+                    visible: true,
                 }
             ],
             "language": {
@@ -462,6 +469,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                 "outputFormat": i.vidFormatSelection,
                 //"outputLocation": "temp output location",
                 "audioFilepath": i.audioFilepath,
+                "trackNum": i.trackNum,
             }).node().id = 'rowBrowseId' + i.sampleItemId;
             count++;
         });
