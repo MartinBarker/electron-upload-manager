@@ -710,7 +710,10 @@ async function renderIndividual(uploadNumber) {
         let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
-        //create output file
+        //create converted audio output filename
+        //let convertedAudioOutput = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
+        //await combineMp3FilesOrig(selectedRows[i], outputFilepath, '320k', timestamp, uploadNumber);
+        //create video output filename
         let vidOutput = `${outputDir}${path.sep}${songName}.mp4`
         console.log('vidOutput=', vidOutput)
         //render vid
@@ -813,7 +816,7 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
                 '-pix_fmt yuv420p',
                 '-shortest'
             ])
-            .size('50%')
+            //.size('50%')
 
             .on('progress', function (progress) {
                 document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
@@ -1020,6 +1023,7 @@ async function newUploadFileDropEvent(event, preventDefault) {
     //sort all files into audio / images 
     var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
+        console.log('filedopevent f.type=', f.type)
         // Using the path attribute to get absolute file path 
         if ((f.type).includes('image')) {
             //fileList.images.push({'path':f.path, 'type':f.type, 'name':f.name})
