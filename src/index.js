@@ -1016,6 +1016,7 @@ async function addToUploadList(uploadKey, uploadValue) {
 
 //when files are dragged into upload drag&drop space
 async function newUploadFileDropEvent(event, preventDefault) {
+    console.log('newUploadFileDropEvent() preventDefault = ', preventDefault)
     if (preventDefault) {
         event.preventDefault();
         event.stopPropagation();
@@ -1023,38 +1024,40 @@ async function newUploadFileDropEvent(event, preventDefault) {
     //sort all files into audio / images 
     var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
-        console.log('filedopevent f.type=', f.type)
+        console.log('newUploadFileDropEvent() f.path =', f.path)
         // Using the path attribute to get absolute file path 
         if ((f.type).includes('image')) {
-            //fileList.images.push({'path':f.path, 'type':f.type, 'name':f.name})
+            console.log('newUploadFileDropEvent() f.type includes image')
             fileList.images.push({ 'path': f.path, 'type': f.type, 'name': f.name })
 
         } else if ((f.type).includes('audio')) {
+            console.log('newUploadFileDropEvent() f.type includes audio')
             var splitType = (f.type).split('/')
+            console.log('newUploadFileDropEvent() splitType = ', splitType)
             var audioFormat = splitType[1]
+            console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
 
             //get metadata
-            console.log('calling getTrackNum()')
             let trackNumRet = await getTrackNum(f.path)
-            console.log('trackNumRet = ', trackNumRet)
+            console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
             
             //get audiolength
             let audioLength = await getDuration(f.path)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
+            console.log('newUploadFileDropEvent() audioLength = ', audioLength)
+
             //push results
             fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet})
         }
     }
     newUploadFiles = fileList
-    console.log('newUploadFiles = ', newUploadFiles)
-
-
+    console.log('newUploadFileDropEvent() newUploadFiles = ', newUploadFiles)
 
     //display files in UI
     var imageFilesHtml = ''
     var audioFilesHtml = ''
     for (const [key, value] of Object.entries(newUploadFiles)) {
-        console.log('key = ', key, ', value = ', value)
+        console.log('DISPLAY IN UI: key = ', key, ', value = ', value)
         if (key == 'images') {
             for (var i = 0; i < value.length; i++) {
                 imageFilesHtml = imageFilesHtml + `${value[i]['name']} <br>`
@@ -1104,21 +1107,33 @@ function getDuration(src) {
     });
 }
 
+var mm = require('music-metadata');
+var util = require('util');
+
 //get track num from audio file metadata
 function getTrackNum(src) {
+    console.log("getTrackNum() src = ", src)
     return new Promise(function (resolve) {
-        var mm = require('music-metadata');
-        var util = require('util');
+        
+        console.log('getTrackNum() init requirerments called')
+        try{
+            console.log('getTrackNum() mm = ', mm)
+            mm.parseFile(src)
+            .then( metadata => {
+                console.log('getTrackNum() TRACK NUMBER = ', metadata.common.track.no)
+                resolve(metadata.common.track.no)
+            })
+            .catch( err => {
+                console.error('getTrackNum() err = ', err.message);
+                resolve(null)
+            });
 
-        mm.parseFile(src)
-        .then( metadata => {
-            console.log('TRACK NUMBER = ', metadata.common.track.no)
-            resolve(metadata.common.track.no)
-        })
-        .catch( err => {
-            console.error('err = ', err.message);
-            reject('err')
-        });
+        }catch(err){
+            console.log('getTrackNum() err caught = ', err)
+        }
+
+        console.log('getTrackNum() end')
+        //resolve(null)
         
     });
 }

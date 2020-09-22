@@ -9,11 +9,13 @@ if (handleSquirrelEvent(app)) {
 function createWindow () { 
   // Create the browser window. 
   const win = new BrowserWindow({ 
-    width: 800, 
-    height: 600, 
-    webPreferences: { 
-      nodeIntegration: true
-    } 
+    width: 800,
+    height: 600,
+    frame: false,
+    backgroundColor: '#FFF',
+    webPreferences: {
+        nodeIntegration: true
+    }
   }) 
   
   // Load the index.html of the app. 
