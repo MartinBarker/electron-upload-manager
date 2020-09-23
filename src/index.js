@@ -68,6 +68,10 @@ $('#deleteModal').on('shown.bs.modal', function (e) {
     })
 })
 
+async function openUrl(){
+    
+}
+
 //new upload
 async function addNewUpload(uploadTitle) {
     console.log('addNewUpload() newUploadFiles = ', newUploadFiles)
@@ -1137,6 +1141,8 @@ function getTrackNum(src) {
         
     });
 }
+
+
 
 //datatables natural sort plugin code below:
 (function () {
