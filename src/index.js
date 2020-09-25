@@ -68,7 +68,11 @@ $('#deleteModal').on('shown.bs.modal', function (e) {
     })
 })
 
-async function openUrl(){
+async function openUrl(type){
+    var open = require("open");
+    if(type='github'){
+        open("https://github.com/MartinBarker/audio-archiver/");
+    }
     
 }
 
