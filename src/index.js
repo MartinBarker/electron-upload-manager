@@ -490,7 +490,8 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             console.log('set all to ', indexValueImgChoice)
             table.rows().eq(0).each(function (index) {
                 console.log('index = ', index)
-                document.getElementById(`upload_${uploadNumber}_table-image-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+                document.getElementById(`upload_${uploadNumber}_table-audio-${index}-img_choice`).selectedIndex = `${indexValueImgChoice}`
+                //upload_1_table-audio-1-img_choice
             });
         });
 
@@ -718,9 +719,15 @@ async function renderIndividual(uploadNumber) {
         let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
-        //create converted audio output filename
-        //let convertedAudioOutput = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
-        //await combineMp3FilesOrig(selectedRows[i], outputFilepath, '320k', timestamp, uploadNumber);
+        let audioFileType = audioFilepath.substr(audioFilepath.length - 4);
+        console.log('audioFileType=', audioFileType)
+        if(audioFileType=='flac'){
+            //convert flac to mp3
+            var timestamp = new Date().getUTCMilliseconds();
+            audioFilepath = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
+            await combineMp3FilesOrig([selectedRows[i]], audioFilepath, '320k', timestamp, uploadNumber, 'IndividualRender');
+        }
+        
         //create video output filename
         let vidOutput = `${outputDir}${path.sep}${songName}.mp4`
         console.log('vidOutput=', vidOutput)
@@ -728,6 +735,11 @@ async function renderIndividual(uploadNumber) {
         let updateInfoLocation = `upload_${uploadNumber}_IndividualRenderStatus`
         document.getElementById(updateInfoLocation).innerHTML = ''
         await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
+
+        if(audioFileType=='flac'){
+            //delete converted mp3 file
+            deleteFile(audioFilepath)
+        }
 
     }
 
@@ -827,7 +839,11 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
             //.size('50%')
 
             .on('progress', function (progress) {
-                document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                if(progress.percent){
+                    document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                }else{
+                    document.getElementById(updateInfoLocation).innerText = `Generating Video...`
+                }
                 console.info(`vid() Processing : ${progress.percent} % done`);
             })
             .on('codecData', function (data) {
@@ -849,8 +865,8 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
 }
 
 //combine multiple audio files into one long audio file
-async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber) {
-    console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
+async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber, type='fullAlbum') {
+    console.log(`combineMp3FilesOrig(), type= ${type}`)
 
     //begin get ffmpeg info
     const ffmpeg = require('fluent-ffmpeg');
@@ -880,18 +896,18 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
         console.log(`combineMp3FilesOrig(): command status logging`)
         command.on('progress', function (progress) {
             console.info(`Processing : ${progress.percent} % done`);
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
+            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
         })
             .on('codecData', function (data) {
                 console.log('codecData=', data);
             })
             .on('end', function () {
-                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
+                document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Audio generated.`
                 console.log('file has been converted succesfully; resolve() promise');
                 resolve();
             })
             .on('error', function (err) {
-                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
+                document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Error generating audio.`
                 console.log('an error happened: ' + err.message, ', reject()');
                 reject(err);
             })
@@ -1050,9 +1066,20 @@ async function newUploadFileDropEvent(event, preventDefault) {
             console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
             
             //get audiolength
-            let audioLength = await getDuration(f.path)
+            console.log('newUploadFileDropEvent() get audioLength ')
+            let audioLength = 0
+            try{
+
+
+            audioLength = await getDuration(f.path)
+            console.log('newUploadFileDropEvent() audioLength1 = ', audioLength)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-            console.log('newUploadFileDropEvent() audioLength = ', audioLength)
+            console.log('newUploadFileDropEvent() audioLength2 = ', audioLength)
+        }catch(err){
+                
+            console.log('newUploadFileDropEvent() err = ', err)
+        }
+        console.log('newUploadFileDropEvent() final audioLength = ', audioLength)
 
             //push results
             fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet})
@@ -1107,11 +1134,20 @@ function sum(date1, date2) {
 //get duration of audio file
 function getDuration(src) {
     return new Promise(function (resolve) {
+        const { getAudioDurationInSeconds } = require('get-audio-duration');
+ 
+        // From a local path...
+        getAudioDurationInSeconds(src).then((duration) => {
+        console.log('getDuration() duration=', duration);
+        resolve(duration)
+        });
+        /*
         var audio = new Audio();
         $(audio).on("loadedmetadata", function () {
             resolve(audio.duration);
         });
         audio.src = src;
+        */
     });
 }
 
