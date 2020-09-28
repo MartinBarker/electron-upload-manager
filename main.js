@@ -1,5 +1,8 @@
 const { app, BrowserWindow } = require('electron') 
-  
+const template = [
+  { role: 'zoomin', accelerator: 'CommandOrControl+=' },
+    ]
+
 // this should be placed at top of main.js to handle setup events quickly
 if (handleSquirrelEvent(app)) {
   // squirrel event handled and app will exit in 1000ms, so don't do anything else
@@ -9,18 +12,20 @@ if (handleSquirrelEvent(app)) {
 function createWindow () { 
   // Create the browser window. 
   const win = new BrowserWindow({ 
-    width: 800, 
-    height: 600, 
-    webPreferences: { 
-      nodeIntegration: true
-    } 
+    width: 800,
+    height: 600,
+    frame: false,
+    backgroundColor: '#FFF',
+    webPreferences: {
+        nodeIntegration: true
+    }
   }) 
   
   // Load the index.html of the app. 
   win.loadFile('src/index.html') 
   
   // Open the DevTools. 
-  win.webContents.openDevTools() 
+  //win.webContents.openDevTools() 
 } 
   
 // This method will be called when Electron has finished 
