@@ -718,6 +718,15 @@ async function renderIndividual(uploadNumber) {
         let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
+        let audioFileType = audioFilepath.substr(audioFilepath.length - 4);
+        console.log('audioFileType=', audioFileType)
+        if(audioFileType=='flac'){
+            //convert flac to mp3
+            var timestamp = new Date().getUTCMilliseconds();
+            audioFilepath = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
+            await combineMp3FilesOrig([selectedRows[i]], audioFilepath, '320k', timestamp, uploadNumber, 'IndividualRender');
+        }
+
         //create converted audio output filename
         //let convertedAudioOutput = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
         //await combineMp3FilesOrig(selectedRows[i], outputFilepath, '320k', timestamp, uploadNumber);
@@ -728,6 +737,11 @@ async function renderIndividual(uploadNumber) {
         let updateInfoLocation = `upload_${uploadNumber}_IndividualRenderStatus`
         document.getElementById(updateInfoLocation).innerHTML = ''
         await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
+
+        if(audioFileType=='flac'){
+            //delete converted mp3 file
+            deleteFile(audioFilepath)
+        }
 
     }
 
