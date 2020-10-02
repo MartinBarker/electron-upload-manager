@@ -489,6 +489,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             let indexValueImgChoice = $(`#upload-${uploadNumber}-imageOptionsCol`).val()
             //console.log('set all to ', indexValueImgChoice)
             table.rows().eq(0).each(function (index) {
+
                 //console.log('index = ', index)
                 document.getElementById(`upload_${uploadNumber}_table-audio-${index}-img_choice`).selectedIndex = `${indexValueImgChoice}`
             });
@@ -718,10 +719,12 @@ async function renderIndividual(uploadNumber) {
         let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
+
         let last4chars = audioFilepath.substr(audioFilepath.length - 4);
         //console.log('audioFileType=', audioFileType)
         if (last4chars == 'flac' || last4chars == '.m4a') {
             //convert flac or m4a to mp3
+
             var timestamp = new Date().getUTCMilliseconds();
             audioFilepath = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
             await combineMp3FilesOrig([selectedRows[i]], audioFilepath, '320k', timestamp, uploadNumber, 'IndividualRender');
@@ -730,6 +733,7 @@ async function renderIndividual(uploadNumber) {
         //create converted audio output filename
         //let convertedAudioOutput = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
         //await combineMp3FilesOrig(selectedRows[i], outputFilepath, '320k', timestamp, uploadNumber);
+
         //create video output filename
         let vidOutput = `${outputDir}${path.sep}${songName}.mp4`
         //console.log('vidOutput=', vidOutput)
@@ -739,6 +743,7 @@ async function renderIndividual(uploadNumber) {
         await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
 
         if (last4chars == 'flac' || last4chars == '.m4a') {
+
             //delete converted mp3 file
             deleteFile(audioFilepath)
         }
@@ -870,7 +875,9 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
 
 //combine multiple audio files into one long audio file
 async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber, type='fullAlbum') {
+
     console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
+
 
     //begin get ffmpeg info
     const ffmpeg = require('fluent-ffmpeg');
@@ -935,56 +942,6 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
         command.run();
     });
 
-    //~~~~~~~~ OLD ~~~~~~~~
-    /*
-    //create ffmpeg command
-    console.log(`combineMp3FilesOrig(): create command`)
-    const command = ffmpeg();
-    //set command inputs
-    //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\5. Akula (Club Mix).flac') //06:16
-    //command.input('C:\\Users\\marti\\Documents\\martinradio\\uploads\\CharlyBoyUTurn\\4. Civilian Barracks.flac') //05:52
-    //add inputs
-    var count = selectedRows.length;
-    for (var i = 0; i < count; i++) {
-        console.log(`combineMp3FilesOrig(): adding input: `, selectedRows[i].audioFilepath)
-        command.input(selectedRows[i].audioFilepath)
-    }
-
-    return new Promise((resolve, reject) => {
-        try {
-
-
-            //console.log(`combineMp3FilesOrig(): command status logging`)
-            command.on('progress', function (progress) {
-                console.info(`Processing : ${progress.percent} % done`);
-                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
-            })
-                .on('codecData', function (data) {
-                    console.log('codecData=', data);
-                })
-                .on('end', function () {
-                    document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
-                    console.log('file has been converted succesfully; resolve() promise');
-                    resolve();
-                })
-                .on('error', function (err) {
-                    document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
-                    console.log('an error happened: ' + err.message, ', reject()');
-                    //reject(err);
-                })
-            //console.log(`combineMp3FilesOrig(): add audio bitrate to command`)
-
-            //console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
-            command.mergeToFile(outputFilepath);
-            command.audioBitrate(bitrate)
-            //console.log(`combineMp3FilesOrig(): end of promise`)
-
-        } catch (err) {
-            console.log('combineMp3FilesOrig() err=', err)
-        }
-
-    });
-    */
     console.log(`combineMp3FilesOrig(): end of function`)
 }
 
@@ -1132,8 +1089,15 @@ async function newUploadFileDropEvent(event, preventDefault) {
             //console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
 
             //get audiolength
-            let audioLength = await getDuration(f.path)
+            console.log('newUploadFileDropEvent() get audioLength ')
+            let audioLength = 0
+            try{
+
+
+            audioLength = await getDuration(f.path)
+            console.log('newUploadFileDropEvent() audioLength1 = ', audioLength)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
+
             //console.log('newUploadFileDropEvent() audioLength = ', audioLength)
 
             //push results
@@ -1193,8 +1157,10 @@ function getDuration(src) {
  
         // From a local path...
         getAudioDurationInSeconds(src).then((duration) => {
+
             resolve(duration)
         });
+
     });
 }
 
