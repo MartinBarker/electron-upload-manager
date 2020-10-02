@@ -1063,7 +1063,9 @@ async function addToUploadList(uploadKey, uploadValue) {
 
 //when files are dragged into upload drag&drop space
 async function newUploadFileDropEvent(event, preventDefault) {
-    //console.log('newUploadFileDropEvent() preventDefault = ', preventDefault)
+    //reveal loading spinner
+    document.getElementById('loadingFilesSpinner').style.display = "block";
+
     if (preventDefault) {
         event.preventDefault();
         event.stopPropagation();
@@ -1071,7 +1073,7 @@ async function newUploadFileDropEvent(event, preventDefault) {
     //sort all files into audio / images 
     var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
-        console.log('newUploadFileDropEvent() f.type= ', f.type, ', f.path =', f.path)
+        //console.log('newUploadFileDropEvent() f.type= ', f.type, ', f.path =', f.path)
         // Using the path attribute to get absolute file path 
         if ((f.type).includes('image')) {
             //console.log('newUploadFileDropEvent() f.type includes image')
@@ -1082,22 +1084,22 @@ async function newUploadFileDropEvent(event, preventDefault) {
             var splitType = (f.type).split('/')
             //console.log('newUploadFileDropEvent() splitType = ', splitType)
             var audioFormat = splitType[1]
-            console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
+            //console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
 
             //get metadata
             let trackNumRet = await getTrackNum(f.path)
             //console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
 
             //get audiolength
-            console.log('newUploadFileDropEvent() get audioLength ')
+            //console.log('newUploadFileDropEvent() get audioLength ')
             let audioLength = 0
             try{
-
-
-            audioLength = await getDuration(f.path)
-            console.log('newUploadFileDropEvent() audioLength1 = ', audioLength)
-            audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-
+                audioLength = await getDuration(f.path)
+                //console.log('newUploadFileDropEvent() audioLength1 = ', audioLength)
+                audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
+            }catch(err){
+                //console.log('err getting audio length: ', err)
+            }
             //console.log('newUploadFileDropEvent() audioLength = ', audioLength)
 
             //push results
@@ -1130,8 +1132,8 @@ async function newUploadFileDropEvent(event, preventDefault) {
     document.getElementById('newUploadImageFileList').innerHTML = imageFilesHtml
     document.getElementById('newUploadAudioFileList').innerHTML = audioFilesHtml
 
-    //add file to uploadList object
-    //addNewUpload(fileList)
+    //hide loading spinner
+    document.getElementById('loadingFilesSpinner').style.display = "none";
 }
 
 //helper function to get sum of two timestamps
