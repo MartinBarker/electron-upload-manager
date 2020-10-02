@@ -10,7 +10,7 @@ require('datatables.net-rowreorder-dt')();
 //if new upload navbar button is clicked
 $("#newUploadFileSelection").change(async function (e) {
     var files = e.currentTarget.files;
-    console.log('newUploadFileSelection: ', files);
+    //console.log('newUploadFileSelection: ', files);
 
     let event = { "dataTransfer": { "files": files } }
     newUploadFileDropEvent(event, false)
@@ -27,10 +27,10 @@ newUploadBox.addEventListener('dragover', (e) => {
     e.stopPropagation();
 });
 newUploadBox.addEventListener('dragenter', (event) => {
-    console.log('NEWUPLOAD File is in the Drop Space');
+    //console.log('NEWUPLOAD File is in the Drop Space');
 });
 newUploadBox.addEventListener('dragleave', (event) => {
-    console.log('NEWUPLOAD File has left the Drop Space');
+    //console.log('NEWUPLOAD File has left the Drop Space');
 });
 
 //when new upload modal is hidden, clear input values
@@ -68,17 +68,17 @@ $('#deleteModal').on('shown.bs.modal', function (e) {
     })
 })
 
-async function openUrl(type){
+async function openUrl(type) {
     var open = require("open");
-    if(type='github'){
+    if (type = 'github') {
         open("https://github.com/MartinBarker/audio-archiver/");
     }
-    
+
 }
 
 //new upload
 async function addNewUpload(uploadTitle) {
-    console.log('addNewUpload() newUploadFiles = ', newUploadFiles)
+    //console.log('addNewUpload() newUploadFiles = ', newUploadFiles)
 
     //get unique uploadNumber
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
@@ -100,7 +100,7 @@ async function addNewUpload(uploadTitle) {
     let uploadObj = { 'title': uploadTitle, 'files': newUploadFiles }
     newUploadFiles = {}
 
-    console.log("+ addNewUpload() uploadKey = ", uploadKey, ", uploadObj = ", uploadObj, ", uploadNumber = ", uploadNumber)
+    //console.log("+ addNewUpload() uploadKey = ", uploadKey, ", uploadObj = ", uploadObj, ", uploadNumber = ", uploadNumber)
     //add to uploadList obj
     await addToUploadList(uploadKey, uploadObj, uploadNumber)
     //update uploadListDisplay
@@ -108,23 +108,23 @@ async function addNewUpload(uploadTitle) {
 }
 
 async function removeUploadFromUploadList(uploadId) {
-    console.log("delete ", uploadId)
+    //console.log("delete ", uploadId)
     let uploadList = await JSON.parse(localStorage.getItem('uploadList'))
-    console.log("delte(0 before = uploadList = ", uploadList)
+    //console.log("delte(0 before = uploadList = ", uploadList)
     delete uploadList[uploadId]
-    console.log("REM(0 after = ", uploadList)
+    //console.log("REM(0 after = ", uploadList)
     await localStorage.setItem('uploadList', JSON.stringify(uploadList))
 
 }
 
 async function deleteUpload(uploadId) {
-    console.log("deleteUpload() uploadId = ", uploadId)
+    //console.log("deleteUpload() uploadId = ", uploadId)
     //when delete button is clicked
 
     document.getElementById("deleteUploadConfirm").addEventListener('click', confirmDelete, { passive: false });
 
     async function confirmDelete() {
-        console.log("deleteUpload() DELETE uploadId = ", uploadId)
+        //console.log("deleteUpload() DELETE uploadId = ", uploadId)
         //remove card display
         document.getElementById(uploadId).remove()
         //remove card from db
@@ -213,7 +213,7 @@ function setAllVidFormats(uploadNum, rowNum, choice) {
     for (var x = 0; x < rowNum; x++) {
         document.getElementById(`upload_${uploadNum}_table-vidFormat-row_${x}`).selectedIndex = `${choice}`
 
-        console.log(`document.getElementById('upload_${uploadNum}_table-vidFormat-row_${x}').selectedIndex = ${choice}`)
+        //console.log(`document.getElementById('upload_${uploadNum}_table-vidFormat-row_${x}').selectedIndex = ${choice}`)
     }
     //document.getElementById(`upload_1_table-vidFormat-row_2`).selectedIndex = 1
 
@@ -222,7 +222,7 @@ function setAllVidFormats(uploadNum, rowNum, choice) {
 
 //create new upload, add datatable and event-listeners
 async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
-    console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
+    //console.log('createNewUploadCard() uploadFiles = ', uploadFiles)
     return new Promise(async function (resolve, reject) {
 
 
@@ -450,7 +450,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     visible: false,
                 },
                 {//trackNum
-                    targets:8,
+                    targets: 8,
                     visible: true,
                 }
             ],
@@ -485,11 +485,11 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         //image selection changed
         $(`#upload-${uploadNumber}-imageOptionsCol`).change(function (event) {
-            console.log(`upload-1-imageOptionsCol clicked`)
+            //console.log(`upload-1-imageOptionsCol clicked`)
             let indexValueImgChoice = $(`#upload-${uploadNumber}-imageOptionsCol`).val()
-            console.log('set all to ', indexValueImgChoice)
+            //console.log('set all to ', indexValueImgChoice)
             table.rows().eq(0).each(function (index) {
-                console.log('index = ', index)
+                //console.log('index = ', index)
                 document.getElementById(`upload_${uploadNumber}_table-image-row_${index}`).selectedIndex = `${indexValueImgChoice}`
             });
         });
@@ -502,7 +502,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
           */
 
         $(`#upload_${uploadNumber}_fullAlbumButton`).on('click', async function (e) {
-            console.log('Begin Concat Audio Command')
+            //console.log('Begin Concat Audio Command')
 
             fullAlbum(`upload-${uploadNumber}`, uploadNumber)
 
@@ -556,10 +556,10 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         //video output format selection changed
         $(`#upload_${uploadNumber}_table-vidFormat-col`).change(function (event) {
-            console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
+            //console.log(`#upload_${uploadNumber}_table-vidFormat-col clicked`)
             let indexValueImgChoice = $(`#upload_${uploadNumber}_table-vidFormat-col`).val()
             var rowNum = table.data().count();
-            console.log('rowNum = ', rowNum)
+            //console.log('rowNum = ', rowNum)
             //for(var x = 0; x < rowNum; x++){
             //    document.getElementById(`upload_${uploadNumber}_table-vidFormat-row_${x}`).selectedIndex = `${indexValueImgChoice}`
             //}
@@ -582,23 +582,23 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         $(`#upload_${uploadNumber}_table-vidLocation`).change(function (event) {
             var filePath = document.getElementById(`upload_${uploadNumber}_table-vidLocation`).files[0].path
-            console.log('filePath = ', filePath)
-            console.log('process.platform  =', process.platform)
+            //console.log('filePath = ', filePath)
+            //console.log('process.platform  =', process.platform)
             if ((process.platform).includes('win')) {
                 var parseChar = "\\"
             }
             var path = (filePath.substring(0, filePath.lastIndexOf(parseChar))) + parseChar
-            console.log('path = ', path)
+            //console.log('path = ', path)
             document.getElementById(`upload_${uploadNumber}_table-vidLocationButton`).innerText = path
 
         })
 
         table.on('order.dt', function (e, diff, edit) {
-            console.log('order', reorder, searched);
+            //console.log('order', reorder, searched);
 
             //don't adjust "#" column if already changed by rowReorder or search events
             if (!reorder && !searched) {
-                console.log('order.dt - resetting order');
+                //console.log('order.dt - resetting order');
                 i = 1;
                 //assign "#" values in row order
                 table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
@@ -614,17 +614,17 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
         });
         table.on('row-reorder', function (e, details, edit) {
-            console.log('row-reorder');
+            //console.log('row-reorder');
             //get original row indexes and original sequence (rowReorder indexes)
             origIndexes = table.rows().indexes().toArray();
             origSeq = table.rows().data().pluck('sequence').toArray();
         });
 
         table.on('search.dt', function () {
-            console.log('search', reorder);
+            //console.log('search', reorder);
             //skip if reorder changed the "#" column order
             if (!reorder) {
-                console.log('search.dt - resetting order');
+                //console.log('search.dt - resetting order');
                 i = 1;
                 //assign "#" values in row order
                 table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx, tableLoop, rowLoop) {
@@ -639,7 +639,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
         });
 
         table.on('row-reordered', function (e, details, edit) {
-            console.log('row-reorderd');
+            //console.log('row-reorderd');
             //get current row indexes and sequence (rowReorder indexes)
             var indexes = table.rows().indexes().toArray();
             //console.log('org indexes', origIndexes);
@@ -685,7 +685,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                     diff[i].newData + ' (was ' + diff[i].oldData + ')<br>';
             }
 
-            console.log(result);
+            //console.log(result);
         });
 
         resolve()
@@ -694,7 +694,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
 
 //render individual videos for an upload
 async function renderIndividual(uploadNumber) {
-    console.log('renderIndividual() uploadNumber = ', uploadNumber)
+    //console.log('renderIndividual() uploadNumber = ', uploadNumber)
     //get table
     var table = $(`#upload_${uploadNumber}_table`).DataTable()
     //get upload from uploadList
@@ -705,9 +705,9 @@ async function renderIndividual(uploadNumber) {
     //get dir
     var path = require('path');
     var outputDir = path.dirname(selectedRows[0].audioFilepath)
-    console.log('path.sep = ', path.sep)
+    //console.log('path.sep = ', path.sep)
     for (var i = 0; i < selectedRows.length; i++) {
-        console.log(i, ': ', selectedRows[i])
+        //console.log(i, ': ', selectedRows[i])
         //get song number:
         let songNum = (selectedRows[i].sequence) - 1
         //get img selection
@@ -719,8 +719,8 @@ async function renderIndividual(uploadNumber) {
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
         let audioFileType = audioFilepath.substr(audioFilepath.length - 4);
-        console.log('audioFileType=', audioFileType)
-        if(audioFileType=='flac'){
+        //console.log('audioFileType=', audioFileType)
+        if (audioFileType == 'flac') {
             //convert flac to mp3
             var timestamp = new Date().getUTCMilliseconds();
             audioFilepath = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
@@ -732,13 +732,13 @@ async function renderIndividual(uploadNumber) {
         //await combineMp3FilesOrig(selectedRows[i], outputFilepath, '320k', timestamp, uploadNumber);
         //create video output filename
         let vidOutput = `${outputDir}${path.sep}${songName}.mp4`
-        console.log('vidOutput=', vidOutput)
+        //console.log('vidOutput=', vidOutput)
         //render vid
         let updateInfoLocation = `upload_${uploadNumber}_IndividualRenderStatus`
         document.getElementById(updateInfoLocation).innerHTML = ''
         await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
 
-        if(audioFileType=='flac'){
+        if (audioFileType == 'flac') {
             //delete converted mp3 file
             deleteFile(audioFilepath)
         }
@@ -752,7 +752,7 @@ async function renderIndividual(uploadNumber) {
 //render a full album upload
 async function fullAlbum(uploadName, uploadNumber) {
     document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = 'Generating Audio: 0%'
-
+    console.log('fullAlbum()')
     //get table
     var table = $(`#upload_${uploadNumber}_table`).DataTable()
     //get all selected rows
@@ -763,7 +763,7 @@ async function fullAlbum(uploadName, uploadNumber) {
     //create outputfile
     var timestamp = new Date().getUTCMilliseconds();
     let outputFilepath = `${outputDir}${path.sep}output-${timestamp}.mp3`
-
+    console.log('fullAlbum() creating concatenated audio file')
     //create concat audio file
     await combineMp3FilesOrig(selectedRows, outputFilepath, '320k', timestamp, uploadNumber);
 
@@ -774,21 +774,23 @@ async function fullAlbum(uploadName, uploadNumber) {
     let imgInput = upload.files.images[imgChoice].path
 
     let vidOutput = `${outputDir}${path.sep}fullAlbum-${timestamp}.mp4`
-    console.log('imgInput = ', imgInput)
+    //console.log('imgInput = ', imgInput)
     let updateInfoLocation = `upload_${uploadNumber}_fullAlbumStatus`
+    console.log('fullAlbum() generating vid')
     await generateVid(outputFilepath, imgInput, vidOutput, updateInfoLocation)
     //await generateVid(selectedRows[0].audioFilepath, imgInput, vidOutput, uploadNumber)
 
-    console.log('deleting file')
+    console.log('fullAlbum() deleting temp fullalbumaudio file')
+    //console.log('deleting file')
     //delete audio file
     deleteFile(outputFilepath)
 
-    console.log('after caclling deleting file')
+    //console.log('after caclling deleting file')
 }
 
 //delete file on the user's machine
 function deleteFile(path) {
-    console.log('deleteFile()')
+    //console.log('deleteFile()')
     const fs = require('fs')
     fs.unlink(path, (err) => {
         if (err) {
@@ -797,7 +799,7 @@ function deleteFile(path) {
         }
 
 
-        console.log('file removed')
+        //console.log('file removed')
 
         //file removed
     })
@@ -806,7 +808,7 @@ function deleteFile(path) {
 //generate video using image and audio
 async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
     return new Promise(async function (resolve, reject) {
-        console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
+        //console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
         document.getElementById(updateInfoLocation).innerText = `Generating Video: 0%`
 
         //begin get ffmpeg info
@@ -878,6 +880,56 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     ffmpeg.setFfprobePath(ffprobePath);
     //end set ffmpeg info
 
+    //~~~~~~~~ NEW ~~~~~~~~
+    return new Promise((resolve, reject) => {
+
+        const command = ffmpeg();
+        //add inputs
+        let inputStr = ''
+        for (var i = 0; i < selectedRows.length; i++) {
+            console.info(`combineMp3FilesOrig() adding  ${selectedRows[i].audioFilepath} to input`);
+            command.input(selectedRows[i].audioFilepath);
+            inputStr=`${inputStr}[${i}:a:0]`
+        }
+        console.log(`combineMp3FilesOrig() i=${i}, inputStr=${inputStr}`)
+        //add progress updates
+        command.on('progress', function (progress) {
+            console.info(`combineMp3FilesOrig() Processing : ${progress.percent} % done`);
+        })
+        .on('start', function (command) {
+            console.log('combineMp3FilesOrig() start, command=', command);
+        })
+        .on('codecData', function (data) {
+            console.log('combineMp3FilesOrig() codecData=', data);
+        })
+        .on('end', function () {
+            console.log('combineMp3FilesOrig() finished');
+            resolve();
+        })
+        .on('error', function (err) {
+            console.log('combineMp3FilesOrig() err=', err);
+            reject('errrrrrrr')
+        });
+        command.output(outputFilepath)
+        //add output
+        command.complexFilter([
+            {
+                "filter":"concat",
+                "options": {
+                    "n": `${i}`,
+                    "v":"0",
+                    "a":"1",
+                },
+                "input": `${inputStr}`
+            }
+        ])
+        //command.mergeToFile(outputFilepath);
+        //command.audioBitrate(bitrate)
+        command.run();
+    });
+
+    //~~~~~~~~ OLD ~~~~~~~~
+    /*
     //create ffmpeg command
     console.log(`combineMp3FilesOrig(): create command`)
     const command = ffmpeg();
@@ -887,36 +939,45 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
     //add inputs
     var count = selectedRows.length;
     for (var i = 0; i < count; i++) {
+        console.log(`combineMp3FilesOrig(): adding input: `, selectedRows[i].audioFilepath)
         command.input(selectedRows[i].audioFilepath)
     }
 
     return new Promise((resolve, reject) => {
-        console.log(`combineMp3FilesOrig(): command status logging`)
-        command.on('progress', function (progress) {
-            console.info(`Processing : ${progress.percent} % done`);
-            document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
-        })
-            .on('codecData', function (data) {
-                console.log('codecData=', data);
-            })
-            .on('end', function () {
-                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
-                console.log('file has been converted succesfully; resolve() promise');
-                resolve();
-            })
-            .on('error', function (err) {
-                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
-                console.log('an error happened: ' + err.message, ', reject()');
-                reject(err);
-            })
-        console.log(`combineMp3FilesOrig(): add audio bitrate to command`)
+        try {
 
-        console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
-        command.mergeToFile(outputFilepath);
-        command.audioBitrate(bitrate)
-        console.log(`combineMp3FilesOrig(): end of promise`)
+
+            //console.log(`combineMp3FilesOrig(): command status logging`)
+            command.on('progress', function (progress) {
+                console.info(`Processing : ${progress.percent} % done`);
+                document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
+            })
+                .on('codecData', function (data) {
+                    console.log('codecData=', data);
+                })
+                .on('end', function () {
+                    document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Audio generated.`
+                    console.log('file has been converted succesfully; resolve() promise');
+                    resolve();
+                })
+                .on('error', function (err) {
+                    document.getElementById(`upload_${uploadNumber}_fullAlbumStatus`).innerText = `Error generating audio.`
+                    console.log('an error happened: ' + err.message, ', reject()');
+                    //reject(err);
+                })
+            //console.log(`combineMp3FilesOrig(): add audio bitrate to command`)
+
+            //console.log(`combineMp3FilesOrig(): tell command to merge inputs to single file`)
+            command.mergeToFile(outputFilepath);
+            command.audioBitrate(bitrate)
+            //console.log(`combineMp3FilesOrig(): end of promise`)
+
+        } catch (err) {
+            console.log('combineMp3FilesOrig() err=', err)
+        }
 
     });
+    */
     console.log(`combineMp3FilesOrig(): end of function`)
 }
 
@@ -965,7 +1026,7 @@ async function updateUploadListDisplay() {
     //get uploadList from localstorage
     var uploadList = await JSON.parse(localStorage.getItem('uploadList'))
 
-    console.log('~ updateUploadListDisplay() uploadList = ', uploadList)
+    //console.log('~ updateUploadListDisplay() uploadList = ', uploadList)
 
     //if uploadList exists
     if (uploadList != null) {
@@ -1019,26 +1080,26 @@ async function addToUploadList(uploadKey, uploadValue) {
 
         //if uploadKey does not exist
         if (uploadList[uploadKey] == null) {
-            console.log(`setting ${uploadKey} in uploadList to be = `, uploadValue)
+            //console.log(`setting ${uploadKey} in uploadList to be = `, uploadValue)
             uploadList[uploadKey] = uploadValue
             uploadList[uploadKey]['audio'] = uploadValue['audio']
         } else {
             //console.log(`${uploadKey} does exist in uploadList, so update pre-existing obj`)
         }
 
-        console.log("++ addToUploadList() done uploadList = ", uploadList)
+        //console.log("++ addToUploadList() done uploadList = ", uploadList)
         let result = await localStorage.setItem('uploadList', JSON.stringify(uploadList))
-        console.log('result = ', result)
+        //console.log('result = ', result)
 
         var tempuploadList = await JSON.parse(localStorage.getItem('uploadList'))
-        console.log('tempuploadList = ', tempuploadList)
+        //console.log('tempuploadList = ', tempuploadList)
         resolve('done')
     })
 }
 
 //when files are dragged into upload drag&drop space
 async function newUploadFileDropEvent(event, preventDefault) {
-    console.log('newUploadFileDropEvent() preventDefault = ', preventDefault)
+    //console.log('newUploadFileDropEvent() preventDefault = ', preventDefault)
     if (preventDefault) {
         event.preventDefault();
         event.stopPropagation();
@@ -1046,40 +1107,40 @@ async function newUploadFileDropEvent(event, preventDefault) {
     //sort all files into audio / images 
     var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
-        console.log('newUploadFileDropEvent() f.path =', f.path)
+        //console.log('newUploadFileDropEvent() f.path =', f.path)
         // Using the path attribute to get absolute file path 
         if ((f.type).includes('image')) {
-            console.log('newUploadFileDropEvent() f.type includes image')
+            //console.log('newUploadFileDropEvent() f.type includes image')
             fileList.images.push({ 'path': f.path, 'type': f.type, 'name': f.name })
 
         } else if ((f.type).includes('audio')) {
-            console.log('newUploadFileDropEvent() f.type includes audio')
+            //console.log('newUploadFileDropEvent() f.type includes audio')
             var splitType = (f.type).split('/')
-            console.log('newUploadFileDropEvent() splitType = ', splitType)
+            //console.log('newUploadFileDropEvent() splitType = ', splitType)
             var audioFormat = splitType[1]
-            console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
+            //console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
 
             //get metadata
             let trackNumRet = await getTrackNum(f.path)
-            console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
-            
+            //console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
+
             //get audiolength
             let audioLength = await getDuration(f.path)
             audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-            console.log('newUploadFileDropEvent() audioLength = ', audioLength)
+            //console.log('newUploadFileDropEvent() audioLength = ', audioLength)
 
             //push results
-            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet})
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet })
         }
     }
     newUploadFiles = fileList
-    console.log('newUploadFileDropEvent() newUploadFiles = ', newUploadFiles)
+    //console.log('newUploadFileDropEvent() newUploadFiles = ', newUploadFiles)
 
     //display files in UI
     var imageFilesHtml = ''
     var audioFilesHtml = ''
     for (const [key, value] of Object.entries(newUploadFiles)) {
-        console.log('DISPLAY IN UI: key = ', key, ', value = ', value)
+        //console.log('DISPLAY IN UI: key = ', key, ', value = ', value)
         if (key == 'images') {
             for (var i = 0; i < value.length; i++) {
                 imageFilesHtml = imageFilesHtml + `${value[i]['name']} <br>`
@@ -1134,29 +1195,29 @@ var util = require('util');
 
 //get track num from audio file metadata
 function getTrackNum(src) {
-    console.log("getTrackNum() src = ", src)
+    //console.log("getTrackNum() src = ", src)
     return new Promise(function (resolve) {
-        
-        console.log('getTrackNum() init requirerments called')
-        try{
-            console.log('getTrackNum() mm = ', mm)
-            mm.parseFile(src)
-            .then( metadata => {
-                console.log('getTrackNum() TRACK NUMBER = ', metadata.common.track.no)
-                resolve(metadata.common.track.no)
-            })
-            .catch( err => {
-                console.error('getTrackNum() err = ', err.message);
-                resolve(null)
-            });
 
-        }catch(err){
-            console.log('getTrackNum() err caught = ', err)
+        //console.log('getTrackNum() init requirerments called')
+        try {
+            //console.log('getTrackNum() mm = ', mm)
+            mm.parseFile(src)
+                .then(metadata => {
+                    //console.log('getTrackNum() TRACK NUMBER = ', metadata.common.track.no)
+                    resolve(metadata.common.track.no)
+                })
+                .catch(err => {
+                    //console.error('getTrackNum() err = ', err.message);
+                    resolve(null)
+                });
+
+        } catch (err) {
+            //console.log('getTrackNum() err caught = ', err)
         }
 
-        console.log('getTrackNum() end')
+        //console.log('getTrackNum() end')
         //resolve(null)
-        
+
     });
 }
 
