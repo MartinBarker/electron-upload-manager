@@ -490,7 +490,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
             //console.log('set all to ', indexValueImgChoice)
             table.rows().eq(0).each(function (index) {
                 //console.log('index = ', index)
-                document.getElementById(`upload_${uploadNumber}_table-image-row_${index}`).selectedIndex = `${indexValueImgChoice}`
+                document.getElementById(`upload_${uploadNumber}_table-audio-${index}-img_choice`).selectedIndex = `${indexValueImgChoice}`
             });
         });
 
@@ -718,10 +718,10 @@ async function renderIndividual(uploadNumber) {
         let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
-        let audioFileType = audioFilepath.substr(audioFilepath.length - 4);
+        let last4chars = audioFilepath.substr(audioFilepath.length - 4);
         //console.log('audioFileType=', audioFileType)
-        if (audioFileType == 'flac') {
-            //convert flac to mp3
+        if (last4chars == 'flac' || last4chars == '.m4a') {
+            //convert flac or m4a to mp3
             var timestamp = new Date().getUTCMilliseconds();
             audioFilepath = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
             await combineMp3FilesOrig([selectedRows[i]], audioFilepath, '320k', timestamp, uploadNumber, 'IndividualRender');
@@ -738,7 +738,7 @@ async function renderIndividual(uploadNumber) {
         document.getElementById(updateInfoLocation).innerHTML = ''
         await generateVid(audioFilepath, imgInput, vidOutput, updateInfoLocation)
 
-        if (audioFileType == 'flac') {
+        if (last4chars == 'flac' || last4chars == '.m4a') {
             //delete converted mp3 file
             deleteFile(audioFilepath)
         }
@@ -1107,7 +1107,7 @@ async function newUploadFileDropEvent(event, preventDefault) {
     //sort all files into audio / images 
     var fileList = { 'images': [], 'audio': [] }
     for (const f of event.dataTransfer.files) {
-        //console.log('newUploadFileDropEvent() f.path =', f.path)
+        console.log('newUploadFileDropEvent() f.type= ', f.type, ', f.path =', f.path)
         // Using the path attribute to get absolute file path 
         if ((f.type).includes('image')) {
             //console.log('newUploadFileDropEvent() f.type includes image')
@@ -1118,7 +1118,7 @@ async function newUploadFileDropEvent(event, preventDefault) {
             var splitType = (f.type).split('/')
             //console.log('newUploadFileDropEvent() splitType = ', splitType)
             var audioFormat = splitType[1]
-            //console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
+            console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
 
             //get metadata
             let trackNumRet = await getTrackNum(f.path)
@@ -1182,11 +1182,12 @@ function sum(date1, date2) {
 //get duration of audio file
 function getDuration(src) {
     return new Promise(function (resolve) {
-        var audio = new Audio();
-        $(audio).on("loadedmetadata", function () {
-            resolve(audio.duration);
+        const { getAudioDurationInSeconds } = require('get-audio-duration');
+ 
+        // From a local path...
+        getAudioDurationInSeconds(src).then((duration) => {
+            resolve(duration)
         });
-        audio.src = src;
     });
 }
 
