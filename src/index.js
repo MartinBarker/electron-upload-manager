@@ -843,7 +843,11 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
             //.size('50%')
 
             .on('progress', function (progress) {
-                document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                if(progress.percent){
+                    document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                }else{
+                    document.getElementById(updateInfoLocation).innerText = `Generating Video...`
+                }
                 console.info(`vid() Processing : ${progress.percent} % done`);
             })
             .on('codecData', function (data) {
@@ -865,7 +869,7 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
 }
 
 //combine multiple audio files into one long audio file
-async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber) {
+async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber, type='fullAlbum') {
     console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
 
     //begin get ffmpeg info
@@ -895,6 +899,7 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
         //add progress updates
         command.on('progress', function (progress) {
             console.info(`combineMp3FilesOrig() Processing : ${progress.percent} % done`);
+            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
         })
         .on('start', function (command) {
             console.log('combineMp3FilesOrig() start, command=', command);
@@ -904,11 +909,13 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
         })
         .on('end', function () {
             console.log('combineMp3FilesOrig() finished');
+            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Audio generated.`
             resolve();
         })
         .on('error', function (err) {
             console.log('combineMp3FilesOrig() err=', err);
-            reject('errrrrrrr')
+            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Error generating audio.`
+            reject(err)
         });
         command.output(outputFilepath)
         //add output
