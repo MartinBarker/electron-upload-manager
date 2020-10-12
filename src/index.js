@@ -3,6 +3,8 @@ var newUploadFiles = {}
 //display every upload in uploadList[]
 updateUploadListDisplay()
 
+require('electron-renderer');
+
 //require datatables
 require('datatables.net-dt')();
 require('datatables.net-rowreorder-dt')();
@@ -848,9 +850,9 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
             //.size('50%')
 
             .on('progress', function (progress) {
-                if(progress.percent){
+                if (progress.percent) {
                     document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
-                }else{
+                } else {
                     document.getElementById(updateInfoLocation).innerText = `Generating Video...`
                 }
                 console.info(`vid() Processing : ${progress.percent} % done`);
@@ -874,7 +876,7 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
 }
 
 //combine multiple audio files into one long audio file
-async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber, type='fullAlbum') {
+async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber, type = 'fullAlbum') {
 
     console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
 
@@ -900,7 +902,7 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
         for (var i = 0; i < selectedRows.length; i++) {
             console.info(`combineMp3FilesOrig() adding  ${selectedRows[i].audioFilepath} to input`);
             command.input(selectedRows[i].audioFilepath);
-            inputStr=`${inputStr}[${i}:a:0]`
+            inputStr = `${inputStr}[${i}:a:0]`
         }
         console.log(`combineMp3FilesOrig() i=${i}, inputStr=${inputStr}`)
         //add progress updates
@@ -908,31 +910,31 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
             console.info(`combineMp3FilesOrig() Processing : ${progress.percent} % done`);
             document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
         })
-        .on('start', function (command) {
-            console.log('combineMp3FilesOrig() start, command=', command);
-        })
-        .on('codecData', function (data) {
-            console.log('combineMp3FilesOrig() codecData=', data);
-        })
-        .on('end', function () {
-            console.log('combineMp3FilesOrig() finished');
-            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Audio generated.`
-            resolve();
-        })
-        .on('error', function (err) {
-            console.log('combineMp3FilesOrig() err=', err);
-            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Error generating audio.`
-            reject(err)
-        });
+            .on('start', function (command) {
+                console.log('combineMp3FilesOrig() start, command=', command);
+            })
+            .on('codecData', function (data) {
+                console.log('combineMp3FilesOrig() codecData=', data);
+            })
+            .on('end', function () {
+                console.log('combineMp3FilesOrig() finished');
+                document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Audio generated.`
+                resolve();
+            })
+            .on('error', function (err) {
+                console.log('combineMp3FilesOrig() err=', err);
+                document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Error generating audio.`
+                reject(err)
+            });
         command.output(outputFilepath)
         //add output
         command.complexFilter([
             {
-                "filter":"concat",
+                "filter": "concat",
                 "options": {
                     "n": `${i}`,
-                    "v":"0",
-                    "a":"1",
+                    "v": "0",
+                    "a": "1",
                 },
                 "input": `${inputStr}`
             }
@@ -1093,11 +1095,11 @@ async function newUploadFileDropEvent(event, preventDefault) {
             //get audiolength
             //console.log('newUploadFileDropEvent() get audioLength ')
             let audioLength = 0
-            try{
+            try {
                 audioLength = await getDuration(f.path)
                 //console.log('newUploadFileDropEvent() audioLength1 = ', audioLength)
                 audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
-            }catch(err){
+            } catch (err) {
                 //console.log('err getting audio length: ', err)
             }
             //console.log('newUploadFileDropEvent() audioLength = ', audioLength)
@@ -1153,21 +1155,20 @@ function sum(date1, date2) {
 }
 
 //get duration of audio file
+const mm = require('music-metadata');
+const util = require('util');
+
 function getDuration(src) {
     return new Promise(function (resolve) {
-        const { getAudioDurationInSeconds } = require('get-audio-duration');
- 
-        // From a local path...
-        getAudioDurationInSeconds(src).then((duration) => {
-
-            resolve(duration)
-        });
-
+        mm.parseFile(src)
+            .then(metadata => {
+                resolve(metadata.format.duration)
+            })
+            .catch(err => {
+                console.error('err = ', err.message);
+            });
     });
 }
-
-var mm = require('music-metadata');
-var util = require('util');
 
 //get track num from audio file metadata
 function getTrackNum(src) {
