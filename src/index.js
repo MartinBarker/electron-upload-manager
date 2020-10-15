@@ -253,7 +253,7 @@ async function createNewUploadCard(uploadTitle, uploadNumber, uploadFiles) {
                             <thead> 
                                 <tr>
                                     <th>sequence</th>
-                                    <th style='max-width:13px'>#</th>
+                                    <th style='width:5%;max-width:10px'>#</th>
                                     <th><input id='upload_${uploadNumber}_table-selectAll' type="checkbox"></th>
                                     <th>Audio</th>
                                     <th style='max-width:58px'>Length</th>
