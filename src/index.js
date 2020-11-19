@@ -1,3 +1,5 @@
+let server = require('../app');
+
 var newUploadFiles = {}
 
 //display every upload in uploadList[]
@@ -708,9 +710,9 @@ async function renderIndividual(uploadNumber) {
     //get dir
     var path = require('path');
     var outputDir = path.dirname(selectedRows[0].audioFilepath)
-    //console.log('path.sep = ', path.sep)
+
+    //for each individual render
     for (var i = 0; i < selectedRows.length; i++) {
-        //console.log(i, ': ', selectedRows[i])
         //get song number:
         let songNum = (selectedRows[i].sequence) - 1
         //get img selection
@@ -721,12 +723,10 @@ async function renderIndividual(uploadNumber) {
         let songName = selectedRows[i].audio.substr(0, selectedRows[i].audio.lastIndexOf("."));
         //get filepath for audio
         let audioFilepath = selectedRows[i].audioFilepath
-
         let last4chars = audioFilepath.substr(audioFilepath.length - 4);
-        //console.log('audioFileType=', audioFileType)
+        //if filetype = flac or m4a
         if (last4chars == 'flac' || last4chars == '.m4a') {
-            //convert flac or m4a to mp3
-
+            //convert to HQ mp3
             var timestamp = new Date().getUTCMilliseconds();
             audioFilepath = `${outputDir}${path.sep}${songName}-convertedAudio.mp3`
             await combineMp3FilesOrig([selectedRows[i]], audioFilepath, '320k', timestamp, uploadNumber, 'IndividualRender');
@@ -812,11 +812,18 @@ function deleteFile(path) {
     })
 }
 
+async function apiRouteTest(){
+    console.log('api route')
+}
+
 //generate video using image and audio
 async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
     return new Promise(async function (resolve, reject) {
-        //console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
-        document.getElementById(updateInfoLocation).innerText = `Generating Video: 0%`
+        console.log('generateVid audioPath = ', audioPath, '\n imgPath = ', imgPath, '\n vidOutput = ', vidOutput)
+        if(updateInfoLocation){
+            console.log('updateInfoLocation found')
+            document.getElementById(updateInfoLocation).innerText = `Generating Video: 0%`
+        }
 
         //begin get ffmpeg info
         const ffmpeg = require('fluent-ffmpeg');
@@ -851,9 +858,13 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
 
             .on('progress', function (progress) {
                 if (progress.percent) {
-                    document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                    if(updateInfoLocation){
+                        document.getElementById(updateInfoLocation).innerText = `Generating Video: ${Math.round(progress.percent)}%`
+                    }
                 } else {
-                    document.getElementById(updateInfoLocation).innerText = `Generating Video...`
+                    if(updateInfoLocation){
+                        document.getElementById(updateInfoLocation).innerText = `Generating Video...`
+                    }
                 }
                 console.info(`vid() Processing : ${progress.percent} % done`);
             })
@@ -861,12 +872,16 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
                 console.log('vid() codecData=', data);
             })
             .on('end', function () {
-                document.getElementById(updateInfoLocation).innerText = `Video generated.`
+                if(updateInfoLocation){
+                    document.getElementById(updateInfoLocation).innerText = `Video generated.`
+                }
                 console.log('vid()  file has been converted succesfully; resolve() promise');
                 resolve();
             })
             .on('error', function (err) {
-                document.getElementById(updateInfoLocation).innerText = `Error generating video.`
+                if(updateInfoLocation){
+                    document.getElementById(updateInfoLocation).innerText = `Error generating video.`
+                }
                 console.log('vid() an error happened: ' + err.message, ', reject()');
                 reject(err);
             })
@@ -877,9 +892,7 @@ async function generateVid(audioPath, imgPath, vidOutput, updateInfoLocation) {
 
 //combine multiple audio files into one long audio file
 async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timestamp, uploadNumber, type = 'fullAlbum') {
-
     console.log(`combineMp3FilesOrig(): ${outputFilepath}`)
-
 
     //begin get ffmpeg info
     const ffmpeg = require('fluent-ffmpeg');
@@ -895,7 +908,7 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
 
     //~~~~~~~~ NEW ~~~~~~~~
     return new Promise((resolve, reject) => {
-
+        //create ffmpeg command
         const command = ffmpeg();
         //add inputs
         let inputStr = ''
@@ -904,28 +917,28 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
             command.input(selectedRows[i].audioFilepath);
             inputStr = `${inputStr}[${i}:a:0]`
         }
-        console.log(`combineMp3FilesOrig() i=${i}, inputStr=${inputStr}`)
+        //console.log(`combineMp3FilesOrig() i=${i}, inputStr=${inputStr}`)
         //add progress updates
         command.on('progress', function (progress) {
             console.info(`combineMp3FilesOrig() Processing : ${progress.percent} % done`);
             document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Generating Audio: ${Math.round(progress.percent)}%`
         })
-            .on('start', function (command) {
-                console.log('combineMp3FilesOrig() start, command=', command);
-            })
-            .on('codecData', function (data) {
-                console.log('combineMp3FilesOrig() codecData=', data);
-            })
-            .on('end', function () {
-                console.log('combineMp3FilesOrig() finished');
-                document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Audio generated.`
-                resolve();
-            })
-            .on('error', function (err) {
-                console.log('combineMp3FilesOrig() err=', err);
-                document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Error generating audio.`
-                reject(err)
-            });
+        .on('start', function (command) {
+            console.log('combineMp3FilesOrig() start, command=', command);
+        })
+        .on('codecData', function (data) {
+            console.log('combineMp3FilesOrig() codecData=', data);
+        })
+        .on('end', function () {
+            console.log('combineMp3FilesOrig() finished');
+            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Audio generated.`
+            resolve();
+        })
+        .on('error', function (err) {
+            console.log('combineMp3FilesOrig() err=', err);
+            document.getElementById(`upload_${uploadNumber}_${type}Status`).innerText = `Error generating audio.`
+            reject(err)
+        });
         command.output(outputFilepath)
         //add output
         command.complexFilter([
@@ -940,7 +953,7 @@ async function combineMp3FilesOrig(selectedRows, outputFilepath, bitrate, timest
             }
         ])
         //command.mergeToFile(outputFilepath);
-        //command.audioBitrate(bitrate)
+        command.audioBitrate(bitrate)
         command.run();
     });
 
