@@ -1089,23 +1089,20 @@ async function newUploadFileDropEvent(event, preventDefault) {
             //console.log('newUploadFileDropEvent() audioFormat = ', audioFormat)
 
             //get metadata
-            let trackNumRet = await getTrackNum(f.path)
+            const metadata = await getMetadata(f.path)
             //console.log('newUploadFileDropEvent() trackNum = ', trackNumRet)
 
-            //get audiolength
-            //console.log('newUploadFileDropEvent() get audioLength ')
             let audioLength = 0
             try {
-                audioLength = await getDuration(f.path)
                 //console.log('newUploadFileDropEvent() audioLength1 = ', audioLength)
-                audioLength = new Date(audioLength * 1000).toISOString().substr(11, 8)
+                audioLength = new Date(metadata.format.duration * 1000).toISOString().substr(11, 8)
             } catch (err) {
                 //console.log('err getting audio length: ', err)
             }
             //console.log('newUploadFileDropEvent() audioLength = ', audioLength)
 
             //push results
-            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': trackNumRet })
+            fileList.audio.push({ 'path': f.path, 'type': audioFormat, 'name': f.name, 'length': audioLength, 'trackNum': metadata.common.track.no })
         }
     }
     newUploadFiles = fileList
@@ -1154,51 +1151,19 @@ function sum(date1, date2) {
     return result.map(r => String(r).padStart(2, "0")).join(":");
 }
 
-//get duration of audio file
+//get duration of audio metadata
 const mm = require('music-metadata');
-const util = require('util');
 
-function getDuration(src) {
-    return new Promise(function (resolve) {
-        mm.parseFile(src)
-            .then(metadata => {
-                resolve(metadata.format.duration)
-            })
-            .catch(err => {
-                console.error('err = ', err.message);
-            });
-    });
+async function getMetadata(src) {
+    try {
+        const metadata = await mm.parseFile(src, {duration: true});
+        console.log(`Music-metadata: track-number = ${metadata.common.track.no}, duration = ${metadata.format.duration} sec.`);
+        return metadata;
+    } catch(err) {
+        console.error('Calculating duration failed', err.message);
+        throw err;
+    }
 }
-
-//get track num from audio file metadata
-function getTrackNum(src) {
-    //console.log("getTrackNum() src = ", src)
-    return new Promise(function (resolve) {
-
-        //console.log('getTrackNum() init requirerments called')
-        try {
-            //console.log('getTrackNum() mm = ', mm)
-            mm.parseFile(src)
-                .then(metadata => {
-                    //console.log('getTrackNum() TRACK NUMBER = ', metadata.common.track.no)
-                    resolve(metadata.common.track.no)
-                })
-                .catch(err => {
-                    //console.error('getTrackNum() err = ', err.message);
-                    resolve(null)
-                });
-
-        } catch (err) {
-            //console.log('getTrackNum() err caught = ', err)
-        }
-
-        //console.log('getTrackNum() end')
-        //resolve(null)
-
-    });
-}
-
-
 
 //datatables natural sort plugin code below:
 (function () {
