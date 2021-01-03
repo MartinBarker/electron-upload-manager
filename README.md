@@ -2,12 +2,14 @@
 
 clone the repo
 
+```shell script
 npm i
 
-electron .
+npm run s
+```
 
 # How to package/distribute the repo
 
+```shell script
 npm run dist
-
-
+```
