@@ -1,4 +1,6 @@
-const { app, BrowserWindow } = require('electron') 
+const { app, BrowserWindow, ipcMain } = require('electron')
+const musicMetadata = require('music-metadata');
+
 const template = [
   { role: 'zoomin', accelerator: 'CommandOrControl+=' },
     ]
@@ -51,7 +53,14 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) { 
     createWindow() 
   } 
-}) 
+})
+
+ipcMain.handle('get-audio-metadata', async (event, filename) => {
+  console.log(`Loading metadata from ${filename}...`);
+  const metadata = await musicMetadata.parseFile(filename, {duration: true});
+  console.log(`Music-metadata: track-number = ${metadata.common.track.no}, duration = ${metadata.format.duration} sec.`);
+  return metadata;
+});
   
 // In this file, you can include the rest of your  
 // app's specific main process code. You can also  
